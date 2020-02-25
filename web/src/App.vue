@@ -70,6 +70,9 @@ export default {
     handleSelect(server, i) {
       this.server = server;
       this.index = i;
+      if (server) {
+        this.$store.state.transient.selectedServer = i
+      }
     },
     selectMainPage() {
 
