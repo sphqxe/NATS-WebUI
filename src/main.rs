@@ -16,6 +16,7 @@ use reqwest::Error;
 use std::future::Future;
 use std::borrow::Borrow;
 use std::time::Duration;
+use http::StatusCode;
 
 #[tokio::main]
 async fn main() -> rusqlite::Result<()> {
@@ -30,23 +31,29 @@ async fn main() -> rusqlite::Result<()> {
     let state = Arc::new(Mutex::new(App::default()));
     let state_filter = warp::any().map(move || Arc::clone(&state));
 
+    // GET /<anything>
     let static_content_route = warp::any()
       .and(warp::get())
       .and(warp::fs::dir("web/dist"))
       .with(log);
 
-    let app_state_route = warp::path("state")
-      .and(warp::get())
+    // GET /api/state
+    let get_app_state_route = warp::get()
       .and(state_filter.clone())
       .and_then(get_state);
+
+    // POST /api/state
+    let post_app_state_route = warp::post()
+      .and(state_filter.clone())
+      .and(warp::body::json::<App>())
+      .and_then(save_state);
 
     // let client_subscribe_route = warp::path("client")
     //   .
 
     let api_route = warp::path("api")
-      .and(
-          app_state_route
-      );
+      .and(warp::path("state"))
+      .and(get_app_state_route.or(post_app_state_route));
 
     let route = static_content_route.or(api_route);
 
@@ -57,10 +64,13 @@ async fn main() -> rusqlite::Result<()> {
     Ok(())
 }
 
-async fn get_state(state: Arc<Mutex<App>>) -> Result<impl warp::Reply, warp::Rejection> {
+async fn get_state(state: Arc<Mutex<App>>) -> Result<Box<dyn warp::Reply> , warp::Rejection> {
     let mut st = state.lock().await;
     let conn = sql::db_conn();
-    let mut svs = sql::get_servers(&conn).map_err(|_| warp::reject::not_found())?;
+    let mut svs = match sql::get_servers(&conn) {
+        Ok(v) => v,
+        Err(e) => return Ok(Box::new(warp::reply::with_status(format!("{:?}", e), StatusCode::INTERNAL_SERVER_ERROR))),
+    };
     let builder = reqwest::ClientBuilder::new()
       .connect_timeout(Duration::new(0, 250_000_000));
     let cl = builder.build().unwrap();
@@ -69,28 +79,20 @@ async fn get_state(state: Arc<Mutex<App>>) -> Result<impl warp::Reply, warp::Rej
             error!("{:?}", e);
         }
     }
-    let mut cls = sql::get_clients(&conn).map_err(|_| warp::reject::not_found())?;
+    let mut cls = match sql::get_clients(&conn) {
+        Ok(v) => v,
+        Err(e) => return Ok(Box::new(warp::reply::with_status(format!("{:?}", e), StatusCode::INTERNAL_SERVER_ERROR))),
+    };
     st.set_servers(svs);
     st.set_clients(cls);
-    Ok(warp::reply::json(&st.clone()))
+    info!("{:?}", st);
+    Ok(Box::new(warp::reply::json(&st.clone())))
 }
 
-// async fn handle_get_state() -> impl Future<Output = Result<Json, Rejection>> {
-//     async {
-//         let mut state = App::default();
-//         let conn = sql::db_conn();
-//         let mut svs = sql::get_servers(&conn).map_err(|_| warp::reject::not_found())?;
-//         for mut s in &mut svs {
-//             s.varz = match s.get_varz().await {
-//                 Ok(v) => Some(v),
-//                 Err(e) => {
-//                     error!("{}", e);
-//                     None
-//                 },
-//             }
-//         }
-//         state.servers = svs;
-//         Ok(warp::reply::json(&state))
-//     }
-// }
+async fn save_state(state: Arc<Mutex<App>>, new_state: App) -> Result<impl warp::Reply, warp::Rejection> {
+    let mut st = state.lock().await;
+    *st = new_state;
+    Ok(warp::reply::reply())
+}
+
 
