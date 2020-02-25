@@ -5,27 +5,23 @@
         <el-menu class="el-menu-vertical-demo" style="text-align: left; height: 100%;" ref="menu">
           <el-menu-item index="1" ref="servers" @click="handleSelect(true, -1)">
             <template slot="title">
-              <i class="el-icon-location"></i>
+              <font-awesome-icon :icon="['fas', 'server']" style="margin: 0px 8px;" />
               <span>Servers</span>
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item v-for="server in servers" @click="handleSelect(true, server.id)" :key="server.id" :index="'1-' + server.id">
+          <el-menu-item v-for="server in servers" @click="handleSelect(true, server.id)" :key="server.id" :index="'1-' + server.id" style="padding-left: 48px;">
             {{ server.name }}
           </el-menu-item>
           <!-- </el-menu-item-group> -->
           <el-menu-item index="2" ref="clients" @click="handleSelect(true, -1)">
             <template slot="title">
-              <i class="el-icon-location"></i>
+              <font-awesome-icon :icon="['fas', 'desktop']" style="margin: 0px 8px;" />
               <span>Clients</span>
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item index="2-1" @click="handleSelect(false, 0)">Client 1</el-menu-item>
-          <el-menu-item index="2-2">Client 2</el-menu-item>
-          <!-- </el-menu-item-group> -->
-          <!-- <el-menu-item-group title="Group Two"> -->
-          <el-menu-item index="2-3">Client 3</el-menu-item>
+          <el-menu-item index="2-1" @click="handleSelect(false, 0)" style="padding-left: 48px;">Client 1</el-menu-item>
           <!-- </el-menu-item-group> -->
         </el-menu>
       </el-aside>
@@ -114,5 +110,9 @@ body {
   display: flex;
   flex-direction: row;
   flex: 1 1 100%;
+}
+
+.el-select-dropdown__item {
+  font-family: Avenir, Helvetica, Arial, sans-serif;
 }
 </style>

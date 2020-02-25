@@ -40,6 +40,9 @@ async fn main() -> rusqlite::Result<()> {
       .and(state_filter.clone())
       .and_then(get_state);
 
+    // let client_subscribe_route = warp::path("client")
+    //   .
+
     let api_route = warp::path("api")
       .and(
           app_state_route
@@ -66,7 +69,9 @@ async fn get_state(state: Arc<Mutex<App>>) -> Result<impl warp::Reply, warp::Rej
             error!("{:?}", e);
         }
     }
+    let mut cls = sql::get_clients(&conn).map_err(|_| warp::reject::not_found())?;
     st.set_servers(svs);
+    st.set_clients(cls);
     Ok(warp::reply::json(&st.clone()))
 }
 

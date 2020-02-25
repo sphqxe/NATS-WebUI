@@ -14,6 +14,10 @@ impl App {
     pub fn set_servers(&mut self, servers: Vec<NatsServer>) {
         self.servers = servers;
     }
+
+    pub fn set_clients(&mut self, clients: Vec<NatsClient>) {
+        self.clients = clients;
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -108,5 +112,16 @@ pub struct ServerCluster {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NatsClient {
-    server: NatsServer
+    pub server_id: i64,
+    pub subjects: Vec<SubjectTreeNode>,
+    pub info: bool,
+    pub ping: bool,
+    pub pong: bool,
+    pub ok: bool,
+    pub err: bool,
+    pub publ: bool,
+    pub sub: bool,
+    pub unsub: bool,
+    pub connect: bool,
+    pub msg: bool
 }

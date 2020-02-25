@@ -1,5 +1,5 @@
 use rusqlite::{params, Connection, Result};
-use crate::datatypes::{NatsServer, SubjectTreeNode, Publication};
+use crate::datatypes::{NatsServer, SubjectTreeNode, Publication, NatsClient};
 use serde_json;
 
 pub fn get_db_conn() -> rusqlite::Result<Connection> {
@@ -23,11 +23,30 @@ pub fn db_setup(conn: &Connection) -> Result<()> {
                 publications	TEXT NOT NULL
             )", params![],
     )?;
+    conn.execute(
+        "CREATE TABLE clients (
+            id	INTEGER NOT NULL UNIQUE,
+            server_id	INTEGER NOT NULL,
+            info	INTEGER NOT NULL,
+            ping	INTEGER NOT NULL,
+            pong	INTEGER NOT NULL,
+            ok	INTEGER NOT NULL,
+            err	INTEGER NOT NULL,
+            publ	INTEGER NOT NULL,
+            sub	INTEGER NOT NULL,
+            unsub	INTEGER NOT NULL,
+            connect	INTEGER NOT NULL,
+            msg	INTEGER NOT NULL,
+            FOREIGN KEY(server_id) REFERENCES servers(id),
+            PRIMARY KEY(id)
+        )", params![],
+    )?;
     Ok(())
 }
 
 pub fn db_teardown(conn: &Connection) -> Result<()> {
     conn.execute("DROP TABLE servers", params![])?;
+    conn.execute("DROP TABLE clients", params![])?;
     Ok(())
 }
 
@@ -43,12 +62,32 @@ pub fn get_servers(conn: &Connection) -> Result<Vec<NatsServer>> {
             port: row.get(3)?,
             monitoring_port: row.get(4)?,
             varz: None,
-            // subjects: vec![],
-            // publications: vec![]
             subjects: serde_json::from_str::<Vec<SubjectTreeNode>>(&sbjs).expect("Failed to parse subject from SQL query as Vec<SubjectTreeNode>"),
             publications: serde_json::from_str::<Vec<Publication>>(&pubs).expect("Failed to parse publications from SQL query as Vec<Publication>")
         })
     })?.into_iter().filter_map(Result::ok).collect::<Vec<NatsServer>>();
+    Ok(rs)
+}
+
+pub fn get_clients(conn: &Connection) -> Result<Vec<NatsClient>> {
+    let mut ps = conn.prepare("SELECT * FROM clients")?;
+    let rs = ps.query_map(params![], |row| {
+        let sbjs: String = row.get(1)?;
+        Ok(NatsClient {
+            server_id: row.get(0)?,
+            subjects: serde_json::from_str::<Vec<SubjectTreeNode>>(&sbjs).expect("Failed to parse subject from SQL query as Vec<SubjectTreeNode>"),
+            info: row.get(2)?,
+            ping: row.get(3)?,
+            pong: row.get(4)?,
+            ok: row.get(5)?,
+            err: row.get(6)?,
+            publ: row.get(7)?,
+            sub: row.get(8)?,
+            unsub: row.get(9)?,
+            connect: row.get(10)?,
+            msg: row.get(11)?
+        })
+    })?.into_iter().filter_map(Result::ok).collect::<Vec<NatsClient>>();
     Ok(rs)
 }
 
