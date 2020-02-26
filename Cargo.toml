@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rants = "0.4"
+rants = { path = "../rants" }
 tokio = { version = "0.2", features = ["macros", "full", "rt-core", "sync"] }
 warp = "0.2"
 log = "0.4"
@@ -18,3 +18,4 @@ reqwest = { version = "0.10", features = ["json"] }
 rusqlite = "0.21"
 serde_json = "1.0"
 http = "0.2"
+futures-util = "0.3"

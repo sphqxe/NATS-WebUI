@@ -3,6 +3,7 @@ use reqwest;
 use std::error::Error;
 use log::info;
 use warp::reply::Response;
+use rants::Subject;
 
 #[derive(Default, Clone, Serialize, Deserialize, Debug)]
 pub struct App {
@@ -49,6 +50,25 @@ impl NatsServer {
 pub struct SubjectTreeNode {
     subject_str: String,
     subjects: Vec<SubjectTreeNode>
+}
+
+impl SubjectTreeNode {
+    fn get_subscriptions(&self, tokens: &mut Vec<String>, subscriptions: &mut Vec<Subject>) {
+        tokens.push(self.subject_str.clone());
+        subscriptions.push(Subject::new(tokens.clone(), false));
+        for s in self.subjects.iter() {
+            s.get_subscriptions(tokens, subscriptions);
+        }
+        tokens.pop();
+    }
+}
+
+impl Into<Vec<rants::Subject>> for SubjectTreeNode {
+    fn into(self) -> Vec<Subject> {
+        let (mut tokens, mut subs) = (Vec::new(), Vec::new());
+        self.get_subscriptions(&mut tokens, &mut subs);
+        subs
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
@@ -112,6 +132,7 @@ pub struct ServerCluster {
 
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct NatsClient {
+    pub id: i64,
     pub server_id: i64,
     pub subjects: Vec<SubjectTreeNode>,
     pub info: bool,
@@ -124,4 +145,14 @@ pub struct NatsClient {
     pub unsub: bool,
     pub connect: bool,
     pub msg: bool
+}
+
+impl NatsClient {
+    pub fn get_subscriptions(&self) -> Vec<rants::Subject> {
+        let (mut tokens, mut subs) = (Vec::new(), Vec::new());
+        for s in self.subjects.iter() {
+            s.get_subscriptions(&mut tokens, &mut subs);
+        }
+        subs
+    }
 }

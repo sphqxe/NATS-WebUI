@@ -5,6 +5,7 @@ name = "NATS-WebUI"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures-util",
  "http 0.2.0",
  "log 0.4.8",
  "rants",
@@ -1215,8 +1216,6 @@ dependencies = [
 [[package]]
 name = "rants"
 version = "0.4.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8012bbcbc3f2a22bf1dded6ee9f06cbe91a9f5f00d579c4227fd66bf4ee33a2"
 dependencies = [
  "bytes 0.5.4",
  "futures",
