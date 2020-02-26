@@ -17,6 +17,29 @@ use std::future::Future;
 use std::borrow::Borrow;
 use std::time::Duration;
 use http::StatusCode;
+use warp::reject::Reject;
+use std::fmt::Debug;
+use warp::filters::ws::WebSocket;
+
+use futures_util::{ sink::SinkExt, stream::StreamExt };
+use warp::ws::Message;
+
+#[derive(Debug, Clone)]
+struct ServerError<E: 'static + std::error::Error + Sync + Send + Debug> {
+    error: E
+}
+
+impl <E: 'static + std::error::Error + Sync + Send + Debug> Reject for ServerError<E> {}
+impl <E: 'static + std::error::Error + Sync + Send + Debug> From<E> for ServerError<E> {
+    fn from(error: E) -> Self {
+        ServerError { error }
+    }
+}
+impl <E: 'static + std::error::Error + Sync + Send + Debug> Into<warp::reject::Rejection> for ServerError<E> {
+    fn into(self) -> Rejection {
+        warp::reject::custom(self)
+    }
+}
 
 #[tokio::main]
 async fn main() -> rusqlite::Result<()> {
@@ -34,8 +57,7 @@ async fn main() -> rusqlite::Result<()> {
     // GET /<anything>
     let static_content_route = warp::any()
       .and(warp::get())
-      .and(warp::fs::dir("web/dist"))
-      .with(log);
+      .and(warp::fs::dir("web/dist"));
 
     // GET /api/state
     let get_app_state_route = warp::get()
@@ -48,14 +70,21 @@ async fn main() -> rusqlite::Result<()> {
       .and(warp::body::json::<App>())
       .and_then(save_state);
 
-    // let client_subscribe_route = warp::path("client")
-    //   .
+    // GET /client with websocket upgrade
+    let client_subscribe_route = warp::path("client")
+      .and(warp::ws())
+      .map(|ws: warp::ws::Ws| {
+          ws.on_upgrade(handle_client_subscription)
+      });
 
     let api_route = warp::path("api")
       .and(warp::path("state"))
       .and(get_app_state_route.or(post_app_state_route));
 
-    let route = static_content_route.or(api_route);
+    let route = static_content_route
+      .or(api_route)
+      .or(client_subscribe_route)
+      .with(log);
 
     warp::serve(route)
       .run(([0, 0, 0, 0], 80))
@@ -64,12 +93,12 @@ async fn main() -> rusqlite::Result<()> {
     Ok(())
 }
 
-async fn get_state(state: Arc<Mutex<App>>) -> Result<Box<dyn warp::Reply> , warp::Rejection> {
+async fn get_state(state: Arc<Mutex<App>>) -> Result<impl warp::Reply , warp::Rejection> {
     let mut st = state.lock().await;
     let conn = sql::db_conn();
     let mut svs = match sql::get_servers(&conn) {
         Ok(v) => v,
-        Err(e) => return Ok(Box::new(warp::reply::with_status(format!("{:?}", e), StatusCode::INTERNAL_SERVER_ERROR))),
+        Err(e) => return Err(ServerError::from(e).into()),
     };
     let builder = reqwest::ClientBuilder::new()
       .connect_timeout(Duration::new(0, 250_000_000));
@@ -81,12 +110,12 @@ async fn get_state(state: Arc<Mutex<App>>) -> Result<Box<dyn warp::Reply> , warp
     }
     let mut cls = match sql::get_clients(&conn) {
         Ok(v) => v,
-        Err(e) => return Ok(Box::new(warp::reply::with_status(format!("{:?}", e), StatusCode::INTERNAL_SERVER_ERROR))),
+        Err(e) => return Err(ServerError::from(e).into()),
     };
     st.set_servers(svs);
     st.set_clients(cls);
     info!("{:?}", st);
-    Ok(Box::new(warp::reply::json(&st.clone())))
+    Ok(warp::reply::json(&st.clone()))
 }
 
 async fn save_state(state: Arc<Mutex<App>>, new_state: App) -> Result<impl warp::Reply, warp::Rejection> {
@@ -95,4 +124,16 @@ async fn save_state(state: Arc<Mutex<App>>, new_state: App) -> Result<impl warp:
     Ok(warp::reply::reply())
 }
 
+async fn handle_client_subscription(mut ws: WebSocket) {
+    let address = "192.168.1.202:4222".parse().unwrap();
+    let client = rants::Client::new(vec![address]);
+    let subject = "yahoo-finance.>".parse().unwrap();
+
+    client.connect_mut().await.echo(true);
+    client.connect().await;
+
+    let (_, mut recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
+
+    ws.send_all(&mut recv.map(|msg| Ok(Message::text(std::str::from_utf8(msg.payload()).unwrap())))).await;
+}
 

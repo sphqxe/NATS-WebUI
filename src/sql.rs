@@ -27,6 +27,7 @@ pub fn db_setup(conn: &Connection) -> Result<()> {
         "CREATE TABLE clients (
             id	INTEGER NOT NULL UNIQUE,
             server_id	INTEGER NOT NULL,
+            subjects    TEXT NOT NULL,
             info	INTEGER NOT NULL,
             ping	INTEGER NOT NULL,
             pong	INTEGER NOT NULL,
@@ -72,20 +73,21 @@ pub fn get_servers(conn: &Connection) -> Result<Vec<NatsServer>> {
 pub fn get_clients(conn: &Connection) -> Result<Vec<NatsClient>> {
     let mut ps = conn.prepare("SELECT * FROM clients")?;
     let rs = ps.query_map(params![], |row| {
-        let sbjs: String = row.get(1)?;
+        let sbjs: String = row.get(2)?;
         Ok(NatsClient {
-            server_id: row.get(0)?,
+            id: row.get(0)?,
+            server_id: row.get(1)?,
             subjects: serde_json::from_str::<Vec<SubjectTreeNode>>(&sbjs).expect("Failed to parse subject from SQL query as Vec<SubjectTreeNode>"),
-            info: row.get(2)?,
-            ping: row.get(3)?,
-            pong: row.get(4)?,
-            ok: row.get(5)?,
-            err: row.get(6)?,
-            publ: row.get(7)?,
-            sub: row.get(8)?,
-            unsub: row.get(9)?,
-            connect: row.get(10)?,
-            msg: row.get(11)?
+            info: row.get(3)?,
+            ping: row.get(4)?,
+            pong: row.get(5)?,
+            ok: row.get(6)?,
+            err: row.get(7)?,
+            publ: row.get(8)?,
+            sub: row.get(9)?,
+            unsub: row.get(10)?,
+            connect: row.get(11)?,
+            msg: row.get(12)?
         })
     })?.into_iter().filter_map(Result::ok).collect::<Vec<NatsClient>>();
     Ok(rs)
