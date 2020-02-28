@@ -1,5 +1,5 @@
 use log::info;
-use rants::Subject;
+use rants::{ Subject, SubjectBuilder };
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -59,7 +59,11 @@ pub struct SubjectTreeNode {
 impl SubjectTreeNode {
     fn get_subscriptions(&self, tokens: &mut Vec<String>, subscriptions: &mut Vec<Subject>) {
         tokens.push(self.subject_str.clone());
-        subscriptions.push(Subject::new(tokens.clone(), false));
+        let mut builder = SubjectBuilder::new();
+        for token in tokens.iter() {
+            builder = builder.add(token.clone());
+        }
+        subscriptions.push(builder.build());
         for s in self.subjects.iter() {
             s.get_subscriptions(tokens, subscriptions);
         }
