@@ -1,14 +1,14 @@
-use serde::{Serialize, Deserialize};
-use reqwest;
-use std::error::Error;
 use log::info;
-use warp::reply::Response;
 use rants::Subject;
+use reqwest;
+use serde::{Deserialize, Serialize};
+use std::error::Error;
+use warp::reply::Response;
 
 #[derive(Default, Clone, Serialize, Deserialize, Debug)]
 pub struct App {
     pub servers: Vec<NatsServer>,
-    pub clients: Vec<NatsClient>
+    pub clients: Vec<NatsClient>,
 }
 
 impl App {
@@ -21,35 +21,39 @@ impl App {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct NatsServer {
-    pub id: i64,
+    pub id: Option<i64>,
     pub name: String,
     pub host: String,
     pub port: u16,
     pub monitoring_port: u16,
     pub varz: Option<ServerVarz>,
     pub subjects: Vec<SubjectTreeNode>,
-    pub publications: Vec<Publication>
+    pub publications: Vec<Publication>,
 }
 
 impl NatsServer {
     pub async fn get_varz(&mut self, cl: &reqwest::Client) -> reqwest::Result<()> {
-        let varz = cl.get(&format!("http://{}:{}/varz", self.host, self.monitoring_port))
-          .send()
-          .await?
-          .json::<ServerVarz>()
-          .await?;
+        let varz = cl
+            .get(&format!(
+                "http://{}:{}/varz",
+                self.host, self.monitoring_port
+            ))
+            .send()
+            .await?
+            .json::<ServerVarz>()
+            .await?;
         info!("{:?}", varz);
         self.varz = Some(varz);
         Ok(())
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct SubjectTreeNode {
     subject_str: String,
-    subjects: Vec<SubjectTreeNode>
+    subjects: Vec<SubjectTreeNode>,
 }
 
 impl SubjectTreeNode {
@@ -71,13 +75,13 @@ impl Into<Vec<rants::Subject>> for SubjectTreeNode {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct Publication {
     subject: String,
-    message: String
+    message: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
 pub struct ServerVarz {
     server_id: String,
     server_name: String,
@@ -123,16 +127,17 @@ pub struct ServerVarz {
     // leaf:
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct ServerCluster {
     addr: String,
     cluster_port: u16,
-    auth_timeout: u64
+    auth_timeout: u64,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct NatsClient {
-    pub id: i64,
+    pub id: Option<i64>,
+    pub name: String,
     pub server_id: i64,
     pub subjects: Vec<SubjectTreeNode>,
     pub info: bool,
@@ -144,7 +149,7 @@ pub struct NatsClient {
     pub sub: bool,
     pub unsub: bool,
     pub connect: bool,
-    pub msg: bool
+    pub msg: bool,
 }
 
 impl NatsClient {
