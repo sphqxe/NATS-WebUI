@@ -20,6 +20,8 @@ use std::time::Duration;
 use warp::filters::ws::WebSocket;
 use warp::reject::Reject;
 use warp::reply::Json;
+use futures::stream::select_all;
+use serde::Serialize;
 
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use warp::ws::Message;
@@ -65,7 +67,8 @@ async fn main() -> rusqlite::Result<()> {
       .and(warp::fs::dir("web/dist"));
 
     // GET /api/state
-    let get_app_state_route = warp::get()
+    let get_app_state_route = warp::path::end()
+      .and(warp::get())
       .and(db_conn_filter.clone())
       .and_then(get_state);
 
@@ -158,6 +161,16 @@ async fn get_state(conn: Connection) -> Result<impl warp::Reply, warp::Rejection
     Ok(warp::reply::json(&st.clone()))
 }
 
+#[derive(Debug, Clone, Serialize)]
+enum SocketMessage {
+    Message(String),
+    Info(String),
+    Ping,
+    Pong,
+    Ok,
+    Err(String)
+}
+
 async fn handle_client_subscription(mut ws: WebSocket) {
     let address = "192.168.1.202:4222".parse().unwrap();
     let client = rants::Client::new(vec![address]);
@@ -167,11 +180,16 @@ async fn handle_client_subscription(mut ws: WebSocket) {
     client.connect().await;
 
     let (_, mut recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
+    let mut info_stream = client.info_stream().await.map(|info| SocketMessage::Info(format!("{:?}", info))).boxed();
+    let mut ping_stream = client.ping_stream().await.map(|_| SocketMessage::Ping).boxed();
+    let mut pong_stream = client.pong_stream().await.map(|_| SocketMessage::Pong).boxed();
+    let mut ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
+    let mut err_stream = client.err_stream().await.map(|e| SocketMessage::Err(format!("{:?}", e))).boxed();
+    let mut msg_stream = recv.map(|msg| SocketMessage::Message(std::str::from_utf8(msg.payload()).unwrap().to_string())).boxed();
 
-    ws.send_all(
-        &mut recv.map(|msg| Ok(Message::text(std::str::from_utf8(msg.payload()).unwrap()))),
-    )
-    .await;
+    let mut stream = select_all(vec![info_stream, ping_stream, pong_stream, ok_stream, err_stream, msg_stream]);
+
+    ws.send_all(&mut stream.map(|msg| Ok(Message::text(serde_json::to_string(&msg).unwrap())))).await;
 }
 
 async fn handle_insert_client(conn: Connection, client: NatsClient) -> Result<impl warp::Reply, warp::Rejection> {
