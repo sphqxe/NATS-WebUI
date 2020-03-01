@@ -1,26 +1,34 @@
 <template>
-  <el-container style="padding: 24px;">
-    <el-table :data="tableData" style="width: 100%; border-bottom: none;" max-height="100%" fit="true">
-      <el-table-column fixed prop="date" label="Date" width="150">
-      </el-table-column>
-      <el-table-column prop="name" label="Name" width="120">
-      </el-table-column>
-      <el-table-column prop="state" label="State" width="120">
-      </el-table-column>
-      <el-table-column prop="city" label="City" width="120">
-      </el-table-column>
-      <el-table-column prop="address" label="Address" resizable>
-      </el-table-column>
-      <el-table-column prop="zip" label="Zip" width="120">
-      </el-table-column>
-      <el-table-column label="Operations" width="120">
-        <template slot-scope="scope">
-          <el-button @click.native.prevent="deleteRow(scope.$index, tableData)" type="text" size="small">
-            Remove
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+  <el-container style="padding: 0px;">
+    <el-header style="padding: 24px;">
+      <el-breadcrumb separator-class="el-icon-arrow-right" >
+        <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
+        <el-breadcrumb-item>Clients</el-breadcrumb-item>
+      </el-breadcrumb>
+    </el-header>
+    <el-main style="padding: 0px;">
+      <el-table :data="tableData" style="width: 100%; border-bottom: none;" max-height="100%" fit="true">
+        <el-table-column fixed prop="date" label="Date" width="150">
+        </el-table-column>
+        <el-table-column prop="name" label="Name" width="120">
+        </el-table-column>
+        <el-table-column prop="state" label="State" width="120">
+        </el-table-column>
+        <el-table-column prop="city" label="City" width="120">
+        </el-table-column>
+        <el-table-column prop="address" label="Address" resizable>
+        </el-table-column>
+        <el-table-column prop="zip" label="Zip" width="120">
+        </el-table-column>
+        <el-table-column label="Operations" width="120">
+          <template slot-scope="scope">
+            <el-button @click.native.prevent="deleteRow(scope.$index, tableData)" type="text" size="small">
+              Remove
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-main>
   </el-container>
 </template>
 

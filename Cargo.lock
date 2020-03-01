@@ -5,6 +5,7 @@ name = "NATS-WebUI"
 version = "0.1.0"
 dependencies = [
  "chrono",
+ "futures",
  "futures-util",
  "http 0.2.0",
  "log 0.4.8",

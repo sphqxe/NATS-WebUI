@@ -1,6 +1,6 @@
 <template>
-  <el-container id="app">
-    <el-container>
+  <el-container id="app" style="height: 100vh;">
+    <el-container style="flex: 0 1 100%; overflow-y: hidden;">
       <el-aside>
         <el-menu class="el-menu-vertical-demo" style="text-align: left; height: 100%;" ref="menu">
           <el-menu-item index="1" ref="servers" @click="handleSelect(true, -1)">
@@ -14,7 +14,7 @@
             {{ server.name }}
           </el-menu-item>
           <!-- </el-menu-item-group> -->
-          <el-menu-item index="2" ref="clients" @click="handleSelect(true, -1)">
+          <el-menu-item index="2" ref="clients" @click="handleSelect(false, -1)">
             <template slot="title">
               <font-awesome-icon :icon="['fas', 'desktop']" style="margin: 0px 8px;" />
               <span>Clients</span>
@@ -31,8 +31,8 @@
       <Monitor v-show="server===true && index >= 0"/>
     </el-container>
     
-    <el-footer style="border-top: solid 1px #e6e6e6; height: 24px; text-align: right;">
-      Copyright Theodore Lee
+    <el-footer style="border-top: solid 1px #e6e6e6; height: 24px; text-align: right; vertical-align: middle; font-size: x-small; line-height: 24px;">
+      <font-awesome-icon :icon="['fas', 'copyright']"/> sphqxe <a href="https://github.com/sphqxe">github.com/sphqxe</a>
     </el-footer>
   </el-container>
 </template>

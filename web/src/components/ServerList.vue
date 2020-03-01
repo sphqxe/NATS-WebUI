@@ -1,44 +1,92 @@
 <template>
-  <el-container style="padding: 24px;">
-    <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" fit="true" @row-click="selectServer">
-      <!-- <el-table-column fixed prop="date" label="Date" width="150">
-      </el-table-column> -->
-      <el-table-column prop="name" label="Name" resizable>
-      </el-table-column>
-      <el-table-column prop="host" label="Hostname" resizable>
-      </el-table-column>
-      <el-table-column prop="port" label="Port" width="160">
-      </el-table-column>
-      <el-table-column prop="monitoring_port" label="Monitoring Port" width="160">
-      </el-table-column>
-      <el-table-column prop="varz.connections" label="Connections" width="120">
-      </el-table-column>
-      <el-table-column prop="varz.in_msgs" label="Messages In" width="120">
-      </el-table-column>
-      <el-table-column prop="varz.out_msgs" label="Messages Out" width="120">
-      </el-table-column>
-      <el-table-column label="Status" width="120">
-        <template slot-scope="scope">
-          <span :style="{color: servers[scope.$index].varz === null ? 'red' : 'green'}">⬤</span>
-        </template>
-      </el-table-column>
-      <!-- <el-table-column label="Operations" width="120">
-        <template slot-scope="scope">
-          <el-button @click.native.prevent="deleteRow(scope.$index, tableData)" type="text" size="small">
-            Remove
-          </el-button>
-        </template>
-      </el-table-column> -->
-    </el-table>
+  <el-container>
+    <el-header style="padding: 24px;">
+      <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle;">
+        <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
+        <el-breadcrumb-item style="line-height: 16px; vertical-align: bottom;">Servers</el-breadcrumb-item>
+      </el-breadcrumb>
+    </el-header>
+    <el-main>
+      <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" fit="true" @row-click="selectServer">
+        <!-- <el-table-column fixed prop="date" label="Date" width="150">
+        </el-table-column> -->
+        <div slot="empty">
+          No servers configured. <br>
+          <span @click="openCreateServerForm(null)">Create</span> a new one.
+        </div>
+        <el-table-column prop="name" label="Name" resizable>
+        </el-table-column>
+        <el-table-column prop="host" label="Hostname" resizable>
+        </el-table-column>
+        <el-table-column prop="port" label="Port" width="160">
+        </el-table-column>
+        <el-table-column prop="monitoring_port" label="Monitoring Port" width="160">
+        </el-table-column>
+        <el-table-column prop="varz.connections" label="Connections" width="120">
+        </el-table-column>
+        <el-table-column prop="varz.in_msgs" label="Messages In" width="120">
+        </el-table-column>
+        <el-table-column prop="varz.out_msgs" label="Messages Out" width="120">
+        </el-table-column>
+        <el-table-column label="Status" width="120">
+          <template slot-scope="scope">
+            <span style="padding: 4px 8px 2px 8px; border-radius: 4px; vertical-align: middle; color: #f6f6f6;" :style="{background: servers[scope.$index].varz === null ? '#F56C6C' : '#67C23A'}">
+              {{servers[scope.$index].varz === null ? 'Unreachable' : 'Connected' }}
+            </span>
+          </template>
+        </el-table-column>
+        <el-table-column label="Operations" width="120">
+          <template slot-scope="scope">
+            <el-button @click.native.stop="editServer(scope.$index)" type="text" size="small">
+              Edit
+            </el-button>
+            <el-button @click.native.stop="removeServer(scope.$index)" type="text" size="small">
+              Remove
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-main>
+    
+    <el-dialog title="Configure New NATS Server" :visible.sync="createServerDialogVisible" width="30%" center>
+      <el-form ref="form" :model="createServerForm" label-width="120px">
+        <el-form-item label="Server Name">
+          <el-input v-model="createServerForm.name"></el-input>
+        </el-form-item>
+        <el-form-item label="Hostname">
+          <el-input v-model="createServerForm.host"></el-input>
+        </el-form-item>
+        <el-form-item label="Message Port">
+          <el-input-number :controls="false" v-model="createServerForm.port"></el-input-number>
+        </el-form-item>
+        <el-form-item label="Monitoring Port">
+          <el-input-number :controls="false" v-model="createServerForm.monitoring_port"></el-input-number>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="createServerDialogVisible = false">Cancel</el-button>
+        <el-button type="primary" @click="serverFormSave">Save</el-button>
+      </span>
+    </el-dialog>
   </el-container>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   data: () => {
     return {
+      createServerDialogVisible: false,
+      createServerForm: {
+        id: null,
+        name: '',
+        host: '',
+        port: 0,
+        monitoring_port: 0,
+        subjects: [],
+        publications: []
+      }
     }
   },
   computed: {
@@ -47,8 +95,36 @@ export default {
     })
   },
   methods: {
+    ...mapActions(['createServer', 'updateServer', 'deleteServer']),
     selectServer(s) {
       this.$emit('selectServer', s.id)
+    },
+    openCreateServerForm(id) {
+      this.createServerForm = {
+        id: id,
+        name: '',
+        host: '',
+        port: 0,
+        monitoring_port: 0,
+        subjects: [],
+        publications: []
+      }
+      this.createServerDialogVisible = true
+    },
+    async serverFormSave() {
+      if (this.createServerForm.id === null) {
+        await this.createServer(JSON.parse(JSON.stringify(this.createServerForm)))
+      } else {
+        await this.updateServer(JSON.parse(JSON.stringify(this.createServerForm)))
+      }
+      this.createServerDialogVisible = false
+    },
+    editServer(idx) {
+      this.createServerForm = JSON.parse(JSON.stringify(this.servers[idx]))
+      this.createServerDialogVisible = true
+    },
+    async removeServer(idx) {
+      await this.deleteServer(this.servers[idx].id)
     }
   }
 }
