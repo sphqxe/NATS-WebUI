@@ -161,36 +161,7 @@ async fn get_state(conn: Connection) -> Result<impl warp::Reply, warp::Rejection
     Ok(warp::reply::json(&st.clone()))
 }
 
-#[derive(Debug, Clone, Serialize)]
-enum SocketMessage {
-    Message(String),
-    Info(String),
-    Ping,
-    Pong,
-    Ok,
-    Err(String)
-}
 
-async fn handle_client_subscription(mut ws: WebSocket) {
-    let address = "192.168.1.202:4222".parse().unwrap();
-    let client = rants::Client::new(vec![address]);
-    let subject = "yahoo-finance.>".parse().unwrap();
-
-    client.connect_mut().await.echo(true);
-    client.connect().await;
-
-    let (_, mut recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
-    let mut info_stream = client.info_stream().await.map(|info| SocketMessage::Info(format!("{:?}", info))).boxed();
-    let mut ping_stream = client.ping_stream().await.map(|_| SocketMessage::Ping).boxed();
-    let mut pong_stream = client.pong_stream().await.map(|_| SocketMessage::Pong).boxed();
-    let mut ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
-    let mut err_stream = client.err_stream().await.map(|e| SocketMessage::Err(format!("{:?}", e))).boxed();
-    let mut msg_stream = recv.map(|msg| SocketMessage::Message(std::str::from_utf8(msg.payload()).unwrap().to_string())).boxed();
-
-    let mut stream = select_all(vec![info_stream, ping_stream, pong_stream, ok_stream, err_stream, msg_stream]);
-
-    ws.send_all(&mut stream.map(|msg| Ok(Message::text(serde_json::to_string(&msg).unwrap())))).await;
-}
 
 async fn handle_insert_client(conn: Connection, client: NatsClient) -> Result<impl warp::Reply, warp::Rejection> {
     match sql::insert_client(&conn, client) {
@@ -232,4 +203,41 @@ async fn handle_delete_server(server_id: i64, conn: Connection) -> Result<impl w
         Ok(_) => Ok(warp::reply()),
         Err(e) => Err(ServerError::from(e).into()),
     }
+}
+
+#[derive(Debug, Clone, Serialize)]
+enum SocketMessage {
+    Message(String),
+    Info(String),
+    Ping,
+    Pong,
+    Ok,
+    Err(String)
+}
+
+#[derive(Debug, Clone, Serialize)]
+struct SubscriptionMessage {
+    payload: String,
+    subject: String
+}
+
+async fn handle_client_subscription(mut ws: WebSocket) {
+    let address = "192.168.1.202:4222".parse().unwrap();
+    let client = rants::Client::new(vec![address]);
+    let subject = "yahoo-finance.>".parse().unwrap();
+
+    client.connect_mut().await.echo(true);
+    client.connect().await;
+
+    let (_, mut recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
+    let mut info_stream = client.info_stream().await.map(|info| SocketMessage::Info(format!("{:?}", info))).boxed();
+    let mut ping_stream = client.ping_stream().await.map(|_| SocketMessage::Ping).boxed();
+    let mut pong_stream = client.pong_stream().await.map(|_| SocketMessage::Pong).boxed();
+    let mut ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
+    let mut err_stream = client.err_stream().await.map(|e| SocketMessage::Err(format!("{:?}", e))).boxed();
+    let mut msg_stream = recv.map(|msg| SocketMessage::Message(std::str::from_utf8(msg.payload()).unwrap().to_string())).boxed();
+
+    let mut stream = select_all(vec![info_stream, ping_stream, pong_stream, ok_stream, err_stream, msg_stream]);
+
+    ws.send_all(&mut stream.map(|msg| Ok(Message::text(serde_json::to_string(&msg).unwrap())))).await;
 }
