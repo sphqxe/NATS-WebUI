@@ -8,6 +8,10 @@ import VueAxios from 'vue-axios'
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faUserSecret, faServer, faDesktop, faLink, faUnlink, faCopyright } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import '../fonts/fonts.css'
+import "prismjs";
+import "prismjs/themes/prism.css";
+import vueNumeralFilterInstaller from 'vue-numeral-filter'
 
 library.add(faUserSecret)
 library.add(faServer)
@@ -20,6 +24,7 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 
 Vue.use(Element)
 Vue.use(VueAxios, axios)
+Vue.use(vueNumeralFilterInstaller)
 Vue.config.productionTip = false
 
 new Vue({
@@ -29,3 +34,4 @@ new Vue({
     store.dispatch('getAppState')
   }
 }).$mount('#app')
+

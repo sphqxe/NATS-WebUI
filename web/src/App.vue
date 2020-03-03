@@ -1,8 +1,12 @@
 <template>
   <el-container id="app" style="height: 100vh;">
     <el-container style="flex: 0 1 100%; overflow-y: hidden;">
-      <el-aside>
-        <el-menu class="el-menu-vertical-demo" style="text-align: left; height: 100%;" ref="menu">
+      <el-aside style="display: flex; flex-direction: column; border-right: 1px solid rgb(230, 230, 230);">
+        <div style="padding: 24px 0px; flex: 0 0 auto;">
+          <img style="height: 48px;" src="large-logo.png">
+          <div style=" width: fit-content; height: 40px; line-height: 40px; font-size: small; margin-top: -24px; padding-left: 180px; font-family: 'Lexend Mega';">WEB-UI</div>
+        </div>
+        <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 1 1 100%; border-right: none;" ref="menu">
           <el-menu-item index="1" ref="servers" @click="handleSelect(true, -1)">
             <template slot="title">
               <font-awesome-icon :icon="['fas', 'server']" style="margin: 0px 8px;" />
@@ -90,10 +94,14 @@ export default {
 <style>
 body {
   margin: 0px !important;
+  font-family: 'Lato', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Raleway';
 }
 
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;

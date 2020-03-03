@@ -7,7 +7,7 @@
       </el-breadcrumb>
     </el-header>
     <el-main>
-      <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" fit="true" @row-click="selectServer">
+      <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectServer">
         <!-- <el-table-column fixed prop="date" label="Date" width="150">
         </el-table-column> -->
         <div slot="empty">

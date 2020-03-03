@@ -7,7 +7,7 @@
       </el-breadcrumb>
     </el-header>
     <el-main style="padding: 0px;">
-      <el-table :data="tableData" style="width: 100%; border-bottom: none;" max-height="100%" fit="true">
+      <el-table :data="tableData" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true">
         <el-table-column fixed prop="date" label="Date" width="150">
         </el-table-column>
         <el-table-column prop="name" label="Name" width="120">
