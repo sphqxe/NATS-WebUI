@@ -1,30 +1,22 @@
 use log::Level;
 use warp::{Filter, Rejection};
-
-pub mod datatypes;
-mod sql;
-
-use datatypes::*;
-
 use std::sync::Arc;
 use tokio::sync::{broadcast, Mutex};
-
 use futures::stream::{select_all, FuturesUnordered};
-
 use log::info;
-
 use rusqlite::Connection;
 use serde::Serialize;
-
 use std::fmt::Debug;
-
 use std::time::Duration;
 use warp::filters::ws::WebSocket;
 use warp::reject::Reject;
-
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use tokio::time;
 use warp::ws::Message;
+
+pub mod datatypes;
+mod sql;
+use datatypes::*;
 
 #[derive(Debug, Clone)]
 struct ServerError<E: 'static + std::error::Error + Sync + Send + Debug> {
@@ -137,6 +129,7 @@ async fn main() -> rusqlite::Result<()> {
         .and(warp::ws())
         .map(|_client_id: i64, ws: warp::ws::Ws| ws.on_upgrade(handle_client_subscription));
 
+    // GET /api/state/ws websocket
     let transient_info_route = warp::path!("ws")
         .and(warp::path::end())
         .and(warp::ws())

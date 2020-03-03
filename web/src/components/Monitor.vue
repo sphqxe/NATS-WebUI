@@ -24,18 +24,40 @@
               <h1 class="metric-label">Messages In</h1>
               <span class="metric-value">{{ server.varz.in_msgs | numeral('0.[00]a') }}</span>
             </div>
-            <div style="display: flex; flex-direction: column;">
+            <div class="metric">
               <h1 class="metric-label">Messages Out</h1>
-              <span class="metric-value">{{ server.varz.out_msgs | numeral('0.00a') }}</span>
+              <span class="metric-value">{{ server.varz.out_msgs | numeral('0.[00]a') }}</span>
             </div>
-            <div style="display: flex; flex-direction: column;">
+            <div class="metric">
               <h1 class="metric-label">Volume In</h1>
               <span class="metric-value">{{ server.varz.in_bytes | numeral('0.00b') }}</span>
             </div>
-            <div style="display: flex; flex-direction: column;">
+            <div class="metric">
               <h1 class="metric-label">Volume Out</h1>
               <span class="metric-value">{{ server.varz.out_bytes | numeral('0.00b') }}</span>
             </div>
+          </div>
+          <div class="metric-row">
+            <div class="metric">
+              <h1 class="metric-label">Messages In</h1>
+              <span class="metric-value">{{ in_msgs_rate | numeral('0.[00]a') }}/s</span>
+            </div>
+            <div class="metric">
+              <h1 class="metric-label">Messages Out</h1>
+              <span class="metric-value">{{ out_msgs_rate | numeral('0.[00]a') }}/s</span>
+            </div>
+            <div class="metric">
+              <h1 class="metric-label">Volume In</h1>
+              <span class="metric-value">{{ in_bytes_rate | numeral('0.00b') }}/s</span>
+            </div>
+            <div class="metric">
+              <h1 class="metric-label">Volume Out</h1>
+              <span class="metric-value">{{ out_bytes_rate | numeral('0.00b') }}/s</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: row; width: 100%;">
+            <VueApexCharts style="flex: 1 1 50%;" v-show="msgs_in_series.length > 1" width="100%" height="180" type="area" ref="chart1" :options="chart1Options" :series="series1"></VueApexCharts>
+            <VueApexCharts style="flex: 1 1 50%;" v-show="bytes_in_series.length > 1" width="100%" height="180" type="area" ref="chart2" :options="chart2Options" :series="series2"></VueApexCharts>
           </div>
           <div id="small-metrics" style="display: flex; flex-direction: row; flex-wrap: wrap;">
             <div class="small-metric">
@@ -272,20 +294,204 @@
 import { mapState, mapActions } from 'vuex'
 import tabdown from 'tabdown-sacha'
 import PrismEditor from 'vue-prism-editor'
+import VueApexCharts from 'vue-apexcharts'
 
 export default {
   components: {
     PrismEditor,
+    VueApexCharts
   },
   computed: {
     ...mapState({
-      server: s => s.transient.serversMap[s.transient.selectedServer]
+      server: s => s.transient.serversMap[s.transient.selectedServer],
+      selected_index: s => s.transient.selectedServer
     })
   },
   data() {
     return {
       tabtree: "",
-      subjectHierarchyDialogVisible: false
+      subjectHierarchyDialogVisible: false,
+      msgs_in_series: [],
+      msgs_out_series: [],
+      bytes_in_series: [],
+      bytes_out_series: [],
+      in_msgs_rate: 0,
+      out_msgs_rate: 0,
+      in_bytes_rate: 0,
+      out_bytes_rate: 0,
+      chart1Options: {
+        chart: {
+          id: 'realtime',
+          height: 180,
+          type: 'line',
+          animations: {
+            enabled: true,
+            easing: 'linear',
+            dynamicAnimation: {
+              speed: 1000
+            }
+          },
+          toolbar: {
+            show: false
+          },
+          zoom: {
+            enabled: false
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        stroke: {
+          curve: 'smooth'
+        },
+        title: {
+          text: 'Message Rate',
+          align: 'left'
+        },
+        markers: {
+          size: 0
+        },
+        xaxis: {
+          type: 'datetime',
+          range: 60000,
+        },
+        yaxis: {
+          min: 0,
+          tickAmount: 3
+        },
+        legend: {
+          show: false
+        },
+      },
+      series1: [
+        { 
+          name: 'Messages In',
+          data: []
+        },
+        {
+          name: 'Messages Out',
+          data: []
+        }
+      ],
+      chart2Options: {
+        chart: {
+          id: 'realtime',
+          height: 180,
+          type: 'line',
+          animations: {
+            enabled: true,
+            easing: 'linear',
+            dynamicAnimation: {
+              speed: 1000
+            }
+          },
+          toolbar: {
+            show: false
+          },
+          zoom: {
+            enabled: false
+          }
+        },
+        dataLabels: {
+          enabled: false
+        },
+        stroke: {
+          curve: 'smooth'
+        },
+        title: {
+          text: 'Traffic Volume',
+          align: 'left'
+        },
+        markers: {
+          size: 0
+        },
+        xaxis: {
+          type: 'datetime',
+          range: 60000,
+        },
+        yaxis: {
+          min: 0,
+          tickAmount: 3
+        },
+        legend: {
+          show: false
+        },
+      },
+      series2: [
+        { 
+          name: 'Bytes In',
+          data: []
+        },
+        {
+          name: 'Bytes Out',
+          data: []
+        }
+      ],
+    }
+  },
+  watch: {
+    "server.varz": function (v, u) {
+      if (u !== undefined) {
+        let dt = new Date().getTime();
+        this.in_msgs_rate = v.in_msgs - u.in_msgs
+        this.msgs_in_series.push({
+          x: dt,
+          y: this.in_msgs_rate
+        })
+        this.out_msgs_rate = v.out_msgs - u.out_msgs
+        this.msgs_out_series.push({
+          x: dt,
+          y: this.out_msgs_rate
+        })
+        this.in_bytes_rate = v.in_bytes - u.in_bytes
+        this.bytes_in_series.push({
+          x: dt,
+          y: this.in_bytes_rate
+        })
+        this.out_bytes_rate = v.out_bytes - u.out_bytes
+        this.bytes_out_series.push({
+          x: dt,
+          y: this.out_bytes_rate
+        })
+        if (this.msgs_in_series.length > 600) {
+          this.msgs_in_series = this.msgs_in_series.slice(this.msgs_in_series.length - 61)
+        }
+        if (this.msgs_out_series.length > 600) {
+          this.msgs_out_series = this.msgs_out_series.slice(this.msgs_out_series.length - 61)
+        }
+        if (this.bytes_in_series.length > 600) {
+          this.bytes_in_series = this.bytes_in_series.slice(this.bytes_in_series.length - 61)
+        }
+        if (this.msgs_in_series.length > 600) {
+          this.bytes_out_series = this.bytes_out_series.slice(this.bytes_out_series.length - 61)
+        }
+        this.$refs.chart1.updateSeries([
+          { 
+            name: 'Messages In',
+            data: this.msgs_in_series
+          },
+          {
+            name: 'Messages Out',
+            data: this.msgs_out_series
+          }
+        ])
+        this.$refs.chart2.updateSeries([
+          { 
+            name: 'Bytes In',
+            data: this.bytes_in_series
+          },
+          {
+            name: 'Bytes Out',
+            data: this.bytes_out_series
+          }
+        ])
+      }
+    },
+    "selected_index": function () {
+      this.msgs_in_series = []
+      this.msgs_out_series = []
+      this.bytes_in_series = []
+      this.bytes_out_series = []
     }
   },
   methods: {
@@ -371,6 +577,7 @@ span.metric-value {
 .metric {
   display: flex;
   flex-direction: column;
+  flex: 0 0 25%;
 }
 
 #small-metrics {

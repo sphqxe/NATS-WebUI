@@ -73,6 +73,7 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import ReconnectingWebSocket from 'reconnecting-websocket'
 
 export default {
   data: () => {
@@ -86,12 +87,14 @@ export default {
         monitoring_port: 0,
         subjects: [],
         publications: []
-      }
+      },
+      socket: null
     }
   },
   computed: {
     ...mapState ({
-      servers: s => s.app_state.servers
+      servers: s => s.app_state.servers,
+      serversMap: s => s.transient.serversMap
     })
   },
   methods: {
@@ -126,6 +129,13 @@ export default {
     async removeServer(idx) {
       await this.deleteServer(this.servers[idx].id)
     }
+  },
+  mounted () {
+    this.socket = new ReconnectingWebSocket('ws://' + window.location.hostname + '/api/state/ws')
+    this.socket.addEventListener('message', function (ev) {
+      let msg = JSON.parse(ev.data)
+      this.serversMap[msg.server_id].varz = msg.varz
+    }.bind(this))
   }
 }
 </script>
