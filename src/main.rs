@@ -5,23 +5,22 @@ pub mod datatypes;
 mod sql;
 
 use datatypes::*;
-use std::ops::Deref;
+
 use std::sync::Arc;
-use tokio::sync::{broadcast, broadcast::Sender, Mutex};
+use tokio::sync::{broadcast, Mutex};
 
 use futures::stream::{select_all, FuturesUnordered};
-use http::StatusCode;
-use log::{error, info};
-use reqwest::Error;
-use rusqlite::{params, Connection};
+
+use log::info;
+
+use rusqlite::Connection;
 use serde::Serialize;
-use std::borrow::Borrow;
+
 use std::fmt::Debug;
-use std::future::Future;
+
 use std::time::Duration;
 use warp::filters::ws::WebSocket;
 use warp::reject::Reject;
-use warp::reply::Json;
 
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use tokio::time;
@@ -65,7 +64,7 @@ async fn main() -> rusqlite::Result<()> {
     // Setup a concurrent running thread that calls monitoring endpoints
     // on configured NATS servers every second.
     let (tx, _) = broadcast::channel::<VarzBroadcastMessage>(16);
-    let mut sender_clone = tx.clone();
+    let sender_clone = tx.clone();
     let receiver_filter = warp::any().map(move || sender_clone.subscribe());
     let state_clone = Arc::clone(&state);
     let sender_clone = tx.clone();
@@ -136,7 +135,7 @@ async fn main() -> rusqlite::Result<()> {
     // GET /client with websocket upgrade
     let client_subscribe_route = warp::path!("client" / i64)
         .and(warp::ws())
-        .map(|client_id: i64, ws: warp::ws::Ws| ws.on_upgrade(handle_client_subscription));
+        .map(|_client_id: i64, ws: warp::ws::Ws| ws.on_upgrade(handle_client_subscription));
 
     let transient_info_route = warp::path!("ws")
         .and(warp::path::end())
@@ -144,9 +143,7 @@ async fn main() -> rusqlite::Result<()> {
         .and(receiver_filter)
         .map(
             |ws: warp::ws::Ws, rx: broadcast::Receiver<VarzBroadcastMessage>| {
-                ws.on_upgrade(
-                    |mut ws: WebSocket| async move { broadcast_transient_info(ws, rx).await },
-                )
+                ws.on_upgrade(|ws: WebSocket| async move { broadcast_transient_info(ws, rx).await })
             },
         );
 
@@ -175,11 +172,11 @@ async fn get_state(
     conn: Connection,
     state: Arc<Mutex<App>>,
 ) -> Result<impl warp::Reply, warp::Rejection> {
-    let mut svs = match sql::get_servers(&conn) {
+    let svs = match sql::get_servers(&conn) {
         Ok(v) => v,
         Err(e) => return Err(ServerError::from(e).into()),
     };
-    let mut cls = match sql::get_clients(&conn) {
+    let cls = match sql::get_clients(&conn) {
         Ok(v) => v,
         Err(e) => return Err(ServerError::from(e).into()),
     };
@@ -299,33 +296,33 @@ async fn handle_client_subscription(mut ws: WebSocket) {
     client.connect_mut().await.echo(true);
     client.connect().await;
 
-    let (_, mut recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
-    let mut info_stream = client
+    let (_, recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
+    let info_stream = client
         .info_stream()
         .await
         .map(|info| SocketMessage::Info(format!("{:?}", info)))
         .boxed();
-    let mut ping_stream = client
+    let ping_stream = client
         .ping_stream()
         .await
         .map(|_| SocketMessage::Ping)
         .boxed();
-    let mut pong_stream = client
+    let pong_stream = client
         .pong_stream()
         .await
         .map(|_| SocketMessage::Pong)
         .boxed();
-    let mut ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
-    let mut err_stream = client
+    let ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
+    let err_stream = client
         .err_stream()
         .await
         .map(|e| SocketMessage::Err(format!("{:?}", e)))
         .boxed();
-    let mut msg_stream = recv
+    let msg_stream = recv
         .map(|msg| SocketMessage::Message(std::str::from_utf8(msg.payload()).unwrap().to_string()))
         .boxed();
 
-    let mut stream = select_all(vec![
+    let stream = select_all(vec![
         info_stream,
         ping_stream,
         pong_stream,

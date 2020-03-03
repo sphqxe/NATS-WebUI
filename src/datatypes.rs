@@ -1,9 +1,6 @@
-use log::info;
 use rants::{Subject, SubjectBuilder};
 use reqwest;
 use serde::{Deserialize, Serialize};
-use std::error::Error;
-use warp::reply::Response;
 
 #[derive(Default, Clone, Serialize, Deserialize, Debug)]
 pub struct App {
