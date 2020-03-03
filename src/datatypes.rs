@@ -1,5 +1,5 @@
 use log::info;
-use rants::{ Subject, SubjectBuilder };
+use rants::{Subject, SubjectBuilder};
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::error::Error;
@@ -34,20 +34,30 @@ pub struct NatsServer {
 }
 
 impl NatsServer {
-    pub async fn get_varz(&mut self, cl: &reqwest::Client) -> reqwest::Result<()> {
-        let varz = cl
-            .get(&format!(
-                "http://{}:{}/varz",
-                self.host, self.monitoring_port
-            ))
+    pub async fn get_varz(
+        id: i64,
+        host: String,
+        port: u16,
+        client: &reqwest::Client,
+    ) -> reqwest::Result<VarzBroadcastMessage> {
+        let varz = client
+            .get(&format!("http://{}:{}/varz", host, port))
             .send()
             .await?
             .json::<ServerVarz>()
             .await?;
-        info!("{:?}", varz);
-        self.varz = Some(varz);
-        Ok(())
+        // info!("{:?}", varz);
+        Ok(VarzBroadcastMessage {
+            server_id: id,
+            varz: varz,
+        })
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VarzBroadcastMessage {
+    server_id: i64,
+    varz: ServerVarz,
 }
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]

@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 rants = { path = "../rants" }
-tokio = { version = "0.2", features = ["macros", "full", "rt-core", "sync"] }
+tokio = { version = "0.2", features = ["macros", "full", "rt-core", "sync", "time"] }
 warp = "0.2"
 log = "0.4"
 simple_logger="1.0"
