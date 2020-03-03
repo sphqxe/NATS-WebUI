@@ -1,0 +1,48 @@
+@font-face {
+    font-family: 'Lato';
+    font-style: normal;
+    font-weight: 400;
+    src: url(Lato_400_normal.eot); /* http://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wWg.eot */
+    src: local('☺'),
+        url(Lato_400_normal.eot?#iefix) format('embedded-opentype'), /* http://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wWg.eot */
+        url(Lato_400_normal.woff2) format('woff2'), /* http://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wXg.woff2 */
+        url(Lato_400_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wWA.woff */
+        url(Lato_400_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/lato/v16/S6uyw4BMUTPHjx4wWyWtFCc.ttf */
+        url(Lato_400_normal.svg#Lato_400_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=S6uyw4BMUTPHjx4wWQ&skey=2d58b92a99e1c086&v=v16#Lato */
+}
+@font-face {
+    font-family: 'Lexend Mega';
+    font-style: normal;
+    font-weight: 400;
+    src: url(Lexend+Mega_400_normal.eot); /* http://fonts.gstatic.com/s/lexendmega/v1/qFdA35aBi5JtHD41zSTFEs7N4h4.eot */
+    src: local('☺'),
+        url(Lexend+Mega_400_normal.eot?#iefix) format('embedded-opentype'), /* http://fonts.gstatic.com/s/lexendmega/v1/qFdA35aBi5JtHD41zSTFEs7N4h4.eot */
+        url(Lexend+Mega_400_normal.woff2) format('woff2'), /* http://fonts.gstatic.com/s/lexendmega/v1/qFdA35aBi5JtHD41zSTFEs7N4ho.woff2 */
+        url(Lexend+Mega_400_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/lexendmega/v1/qFdA35aBi5JtHD41zSTFEs7N4hw.woff */
+        url(Lexend+Mega_400_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/lexendmega/v1/qFdA35aBi5JtHD41zSTFEs7N4h8iiVI6.ttf */
+        url(Lexend+Mega_400_normal.svg#Lexend+Mega_400_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=qFdA35aBi5JtHD41zSTFEs7N4h0&skey=d28adc07680f92a&v=v1#LexendMega */
+}
+@font-face {
+    font-family: 'Lexend Exa';
+    font-style: normal;
+    font-weight: 400;
+    src: url(Lexend+Exa_400_normal.eot); /* http://fonts.gstatic.com/s/lexendexa/v1/UMBXrPdOoHOnxExyjdBeai3dBw.eot */
+    src: local('☺'),
+        url(Lexend+Exa_400_normal.eot?#iefix) format('embedded-opentype'), /* http://fonts.gstatic.com/s/lexendexa/v1/UMBXrPdOoHOnxExyjdBeai3dBw.eot */
+        url(Lexend+Exa_400_normal.woff2) format('woff2'), /* http://fonts.gstatic.com/s/lexendexa/v1/UMBXrPdOoHOnxExyjdBeai3dAw.woff2 */
+        url(Lexend+Exa_400_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/lexendexa/v1/UMBXrPdOoHOnxExyjdBeai3dBQ.woff */
+        url(Lexend+Exa_400_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/lexendexa/v1/UMBXrPdOoHOnxExyjdBeai3dBpE64Bc.ttf */
+        url(Lexend+Exa_400_normal.svg#Lexend+Exa_400_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=UMBXrPdOoHOnxExyjdBeai3dBA&skey=2b8d663f338010ea&v=v1#LexendExa */
+}
+@font-face {
+    font-family: 'Raleway';
+    font-style: normal;
+    font-weight: 400;
+    src: url(Raleway_400_normal.eot); /* http://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0ISw.eot */
+    src: local('☺'),
+        url(Raleway_400_normal.eot?#iefix) format('embedded-opentype'), /* http://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0ISw.eot */
+        url(Raleway_400_normal.woff2) format('woff2'), /* http://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0ITw.woff2 */
+        url(Raleway_400_normal.woff) format('woff'), /* http://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0ISQ.woff */
+        url(Raleway_400_normal.ttf) format('truetype'), /* http://fonts.gstatic.com/s/raleway/v14/1Ptug8zYS_SKggPNyC0ISottDfA.ttf */
+        url(Raleway_400_normal.svg#Raleway_400_normal) format('svg'); /* http://fonts.gstatic.com/l/font?kit=1Ptug8zYS_SKggPNyC0ISA&skey=30a27f2564731c64&v=v14#Raleway */
+}
