@@ -1,10 +1,13 @@
 <template>
   <el-container>
-    <el-header style="padding: 24px;">
-      <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle;">
+    <el-header style="padding: 12px; display: flex; flex-direction: row; justify-content: space-between; height: 60px;">
+      <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle; padding: 12px;">
         <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
         <el-breadcrumb-item style="line-height: 16px; vertical-align: bottom;">Servers</el-breadcrumb-item>
       </el-breadcrumb>
+      <el-button @click.native.stop="openCreateServerForm(null)" icon="el-icon-plus" size="small">
+        Add Server
+      </el-button>
     </el-header>
     <el-main>
       <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectServer">
@@ -37,11 +40,9 @@
         </el-table-column>
         <el-table-column label="Operations" width="120">
           <template slot-scope="scope">
-            <el-button @click.native.stop="editServer(scope.$index)" type="text" size="small">
-              Edit
+            <el-button @click.native.stop="editServer(scope.$index)" icon="el-icon-edit" size="small">
             </el-button>
-            <el-button @click.native.stop="removeServer(scope.$index)" type="text" size="small">
-              Remove
+            <el-button @click.native.stop="removeServer(scope.$index)" icon="el-icon-delete" size="small">
             </el-button>
           </template>
         </el-table-column>
@@ -107,8 +108,8 @@ export default {
         id: id,
         name: '',
         host: '',
-        port: 0,
-        monitoring_port: 0,
+        port: 4222,
+        monitoring_port: 8222,
         subjects: [],
         publications: []
       }

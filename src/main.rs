@@ -4,7 +4,7 @@ use std::sync::Arc;
 use tokio::sync::{broadcast, Mutex};
 use futures::stream::{select_all, FuturesUnordered};
 use log::info;
-use rusqlite::Connection;
+use rusqlite::{Connection, Error};
 use serde::Serialize;
 use std::fmt::Debug;
 use std::time::Duration;
@@ -13,10 +13,12 @@ use warp::reject::Reject;
 use futures_util::{sink::SinkExt, stream::StreamExt};
 use tokio::time;
 use warp::ws::Message;
+use chrono::Utc;
 
 pub mod datatypes;
 mod sql;
 use datatypes::*;
+use rants::Address;
 
 #[derive(Debug, Clone)]
 struct ServerError<E: 'static + std::error::Error + Sync + Send + Debug> {
@@ -127,7 +129,8 @@ async fn main() -> rusqlite::Result<()> {
     // GET /client with websocket upgrade
     let client_subscribe_route = warp::path!("client" / i64)
         .and(warp::ws())
-        .map(|_client_id: i64, ws: warp::ws::Ws| ws.on_upgrade(handle_client_subscription));
+        .and(db_conn_filter.clone())
+        .and_then(handle_client_subscribe_request);
 
     // GET /api/state/ws websocket
     let transient_info_route = warp::path!("ws")
@@ -137,7 +140,7 @@ async fn main() -> rusqlite::Result<()> {
         .map(
             |ws: warp::ws::Ws, rx: broadcast::Receiver<VarzBroadcastMessage>| {
                 ws.on_upgrade(|ws: WebSocket| async move { broadcast_transient_info(ws, rx).await })
-            },
+            }
         );
 
     let api_route = warp::path("api").and(warp::path("state")).and(
@@ -266,13 +269,21 @@ async fn handle_delete_server(
 }
 
 #[derive(Debug, Clone, Serialize)]
-enum SocketMessage {
-    Message(String),
-    Info(String),
+struct SocketMessage {
+    typ: SocketMessageType,
+    timestamp: i64,
+    subject: Option<String>,
+    message: String
+}
+
+#[derive(Debug, Clone, Serialize)]
+enum SocketMessageType {
+    Msg,
+    Info,
     Ping,
     Pong,
     Ok,
-    Err(String),
+    Err,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -281,39 +292,88 @@ struct SubscriptionMessage {
     subject: String,
 }
 
-async fn handle_client_subscription(mut ws: WebSocket) {
-    let address = "192.168.1.202:4222".parse().unwrap();
-    let client = rants::Client::new(vec![address]);
-    let subject = "yahoo-finance.>".parse().unwrap();
+async fn handle_client_subscribe_request(client_id: i64, ws: warp::ws::Ws, conn: Connection) -> Result<impl warp::Reply, warp::Rejection> {
+    match sql::get_connection_triple(&conn, client_id) {
+        Ok((hostname, port, mut subjects)) => {
+            let addr = format!("{}:{}", hostname, port).parse().unwrap();
+            Ok(ws.on_upgrade(|ws| async move {
+                let mut sbjs = Vec::new();
+                while let Some(s) = subjects.pop() {
+                    sbjs.append(&mut s.into())
+                }
+                handle_client_subscription(ws, addr, sbjs).await
+            }))
+        },
+        Err(e) => Err(ServerError::from(e).into()),
+    }
+
+}
+
+async fn handle_client_subscription(mut ws: WebSocket, dest: Address, subjects: Vec<rants::Subject>) {
+    let client = rants::Client::new(vec![dest]);
 
     client.connect_mut().await.echo(true);
     client.connect().await;
 
-    let (_, recv) = client.subscribe(&subject, 1_048_576).await.unwrap();
+    let mut receivers = Vec::new();
+    for sbj in subjects.iter() {
+        let (_, recv) = client.subscribe(&sbj, 1_048_576).await.unwrap();
+        receivers.push(recv);
+    }
+
+    let recv = select_all(receivers);
+
     let info_stream = client
         .info_stream()
         .await
-        .map(|info| SocketMessage::Info(format!("{:?}", info)))
-        .boxed();
+        .map(|info| SocketMessage {
+            typ: SocketMessageType::Info,
+            timestamp: Utc::now().timestamp_millis(),
+            subject: None,
+            message: format!("{:?}", info)
+        }).boxed();
     let ping_stream = client
         .ping_stream()
         .await
-        .map(|_| SocketMessage::Ping)
-        .boxed();
+        .map(|_| SocketMessage {
+            typ: SocketMessageType::Ping,
+            timestamp: Utc::now().timestamp_millis(),
+            subject: None,
+            message: "PING".to_string()
+        }).boxed();
     let pong_stream = client
         .pong_stream()
         .await
-        .map(|_| SocketMessage::Pong)
-        .boxed();
-    let ok_stream = client.ok_stream().await.map(|_| SocketMessage::Ok).boxed();
+        .map(|_| SocketMessage {
+            typ: SocketMessageType::Pong,
+            timestamp: Utc::now().timestamp_millis(),
+            subject: None,
+            message: "PONG".to_string()
+        }).boxed();
+    let ok_stream = client.ok_stream()
+      .await
+      .map(|_| SocketMessage {
+          typ: SocketMessageType::Ok,
+          timestamp: Utc::now().timestamp_millis(),
+          subject: None,
+          message: "OK".to_string()
+      }).boxed();
     let err_stream = client
         .err_stream()
         .await
-        .map(|e| SocketMessage::Err(format!("{:?}", e)))
-        .boxed();
+        .map(|e| SocketMessage {
+            typ: SocketMessageType::Err,
+            timestamp: Utc::now().timestamp_millis(),
+            subject: None,
+            message: format!("{:?}", e)
+        }).boxed();
     let msg_stream = recv
-        .map(|msg| SocketMessage::Message(std::str::from_utf8(msg.payload()).unwrap().to_string()))
-        .boxed();
+        .map(|msg| SocketMessage {
+            typ: SocketMessageType::Msg,
+            timestamp: Utc::now().timestamp_millis(),
+            subject: Some(format!("{}", msg.subject()).to_string()),
+            message: std::str::from_utf8(msg.payload()).unwrap().to_string()
+        }).boxed();
 
     let stream = select_all(vec![
         info_stream,

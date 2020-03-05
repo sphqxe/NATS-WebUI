@@ -17,7 +17,8 @@ export default new Vuex.Store({
     transient: {
       serversMap: {},
       clientsMap: {},
-      selectedServer: 1
+      selectedServer: 1,
+      selectedClient: 1
     }
   },
   getters: {},

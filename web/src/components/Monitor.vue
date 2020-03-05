@@ -21,37 +21,37 @@
         <div v-if="server.varz!==null" style="display: flex; flex-direction: column;">
           <div class="metric-row">
             <div class="metric">
-              <h1 class="metric-label">Messages In</h1>
+              <h1 class="metric-label">Total Messages In</h1>
               <span class="metric-value">{{ server.varz.in_msgs | numeral('0.[00]a') }}</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Messages Out</h1>
+              <h1 class="metric-label">Total Messages Out</h1>
               <span class="metric-value">{{ server.varz.out_msgs | numeral('0.[00]a') }}</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Volume In</h1>
+              <h1 class="metric-label">Total Data Volume In</h1>
               <span class="metric-value">{{ server.varz.in_bytes | numeral('0.00b') }}</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Volume Out</h1>
+              <h1 class="metric-label">Total Data Volume Out</h1>
               <span class="metric-value">{{ server.varz.out_bytes | numeral('0.00b') }}</span>
             </div>
           </div>
           <div class="metric-row">
             <div class="metric">
-              <h1 class="metric-label">Messages In</h1>
-              <span class="metric-value">{{ in_msgs_rate | numeral('0.[00]a') }}/s</span>
+              <h1 class="metric-label">Message In Rate</h1>
+              <span class="metric-value">{{ in_msgs_rate | numeral('0.[00]a') }}</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Messages Out</h1>
-              <span class="metric-value">{{ out_msgs_rate | numeral('0.[00]a') }}/s</span>
+              <h1 class="metric-label">Message Out Rate</h1>
+              <span class="metric-value">{{ out_msgs_rate | numeral('0.[00]a') }}</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Volume In</h1>
+              <h1 class="metric-label">Incoming Data Rate</h1>
               <span class="metric-value">{{ in_bytes_rate | numeral('0.00b') }}/s</span>
             </div>
             <div class="metric">
-              <h1 class="metric-label">Volume Out</h1>
+              <h1 class="metric-label">Outgoing Data Rate</h1>
               <span class="metric-value">{{ out_bytes_rate | numeral('0.00b') }}/s</span>
             </div>
           </div>
@@ -62,7 +62,7 @@
           <div id="small-metrics" style="display: flex; flex-direction: row; flex-wrap: wrap;">
             <div class="small-metric">
               <span class="metric-label-small">
-                Version
+                NATS Version
               </span>
               <span class="metric-value-small">
                 {{ server.varz.version }}
@@ -97,7 +97,7 @@
                 Ping Interval
               </span>
               <span class="metric-value-small">
-                {{ server.varz.ping_interval }}
+                {{ server.varz.ping_interval / 1000000000 }}s
               </span>
             </div>
             <div class="small-metric">
@@ -121,7 +121,7 @@
                 Maximum Payload Size
               </span>
               <span class="metric-value-small">
-                {{ server.varz.max_payload }}
+                {{ server.varz.max_payload | numeral('0.00b') }}
               </span>
             </div>
             <div class="small-metric">
@@ -129,7 +129,7 @@
                 Maximum Pending
               </span>
               <span class="metric-value-small">
-                {{ server.varz.max_pending }}
+                {{ server.varz.max_pending | numeral('0.00b') }}
               </span>
             </div>
             <div class="small-metric">
@@ -145,7 +145,7 @@
                 Write Deadline
               </span>
               <span class="metric-value-small">
-                {{ server.varz.write_deadline }}
+                {{ server.varz.write_deadline / 1000000000 }}s
               </span>
             </div>
             <div class="small-metric">
@@ -153,7 +153,7 @@
                 Start Time
               </span>
               <span class="metric-value-small">
-                {{ server.varz.start }}
+                {{ server.varz.start | moment("MMMM Do YYYY, h:mm:ss a") }}
               </span>
             </div>
             <div class="small-metric">
@@ -166,10 +166,10 @@
             </div>
             <div class="small-metric">
               <span class="metric-label-small">
-                Memory Available
+                Memory Usage
               </span>
               <span class="metric-value-small">
-                {{ server.varz.mem }}
+                {{ server.varz.mem | numeral('0.00b') }}
               </span>
             </div>
             <div class="small-metric">
@@ -238,20 +238,28 @@
             </div>
             <div class="small-metric">
               <span class="metric-label-small">
+                NATS Port
+              </span>
+              <span class="metric-value-small">
+                {{ server.port }}
+              </span>
+            </div>
+            <div class="small-metric">
+              <span class="metric-label-small">
                 Monitoring Port
               </span>
               <span class="metric-value-small">
                 {{ server.monitoring_port }}
               </span>
             </div>
-            <div class="small-metric">
+            <!-- <div class="small-metric">
               <span class="metric-label-small">
                 Server Name
               </span>
               <span class="metric-value-small">
                 {{ server.varz.server_name }}
               </span>
-            </div>
+            </div> -->
             <div class="small-metric">
               <span class="metric-label-small">
                 Server ID
@@ -357,7 +365,8 @@ export default {
         },
         yaxis: {
           min: 0,
-          tickAmount: 3
+          tickAmount: 3,
+          forceNiceScale: true
         },
         legend: {
           show: false
@@ -411,7 +420,8 @@ export default {
         },
         yaxis: {
           min: 0,
-          tickAmount: 3
+          tickAmount: 3,
+          forceNiceScale: true
         },
         legend: {
           show: false
@@ -453,16 +463,16 @@ export default {
           x: dt,
           y: this.out_bytes_rate
         })
-        if (this.msgs_in_series.length > 600) {
+        if (this.msgs_in_series.length > 3600) {
           this.msgs_in_series = this.msgs_in_series.slice(this.msgs_in_series.length - 61)
         }
-        if (this.msgs_out_series.length > 600) {
+        if (this.msgs_out_series.length > 3600) {
           this.msgs_out_series = this.msgs_out_series.slice(this.msgs_out_series.length - 61)
         }
-        if (this.bytes_in_series.length > 600) {
+        if (this.bytes_in_series.length > 3600) {
           this.bytes_in_series = this.bytes_in_series.slice(this.bytes_in_series.length - 61)
         }
-        if (this.msgs_in_series.length > 600) {
+        if (this.msgs_in_series.length > 3600) {
           this.bytes_out_series = this.bytes_out_series.slice(this.bytes_out_series.length - 61)
         }
         this.$refs.chart1.updateSeries([
@@ -506,7 +516,6 @@ export default {
     },
     async saveSubjectTree() {
       let server = JSON.parse(JSON.stringify(this.server))
-      console.log(this.tabtree)
       server.subjects = this.tabdownTreeToSubjectTree(tabdown.parse(this.tabtree.replace(/ {2}/g, '\t').split('\n'), '\t'))
       await this.updateServer(server)
       await this.getAppState()
@@ -561,6 +570,7 @@ export default {
 <style scoped>
 h1.metric-label {
   margin: 0px;
+  color: #C0C4CC;
 }
 
 span.metric-value {

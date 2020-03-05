@@ -25,7 +25,9 @@
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item index="2-1" @click="handleSelect(false, 0)" style="padding-left: 48px;">Client 1</el-menu-item>
+          <el-menu-item v-for="client in clients" :index="'2-' + client.id" @click="handleSelect(false, client.id)" :key="client.id" style="padding-left: 48px;">
+            {{ client.name }}
+          </el-menu-item>
           <!-- </el-menu-item-group> -->
         </el-menu>
       </el-aside>
@@ -72,6 +74,8 @@ export default {
       this.index = i;
       if (server) {
         this.$store.state.transient.selectedServer = i
+      } else {
+        this.$store.state.transient.selectedClient = i
       }
     },
     selectMainPage() {

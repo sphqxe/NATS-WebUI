@@ -25,6 +25,7 @@ Vue.component('font-awesome-icon', FontAwesomeIcon)
 Vue.use(Element)
 Vue.use(VueAxios, axios)
 Vue.use(vueNumeralFilterInstaller)
+Vue.use(require('vue-moment'))
 Vue.config.productionTip = false
 
 new Vue({
