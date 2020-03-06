@@ -4,6 +4,8 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 import VueRouter from 'vue-router'
 
+var Deque = require('double-ended-queue')
+
 Vue.use(Vuex)
 Vue.use(VueRouter)
 Vue.use(VueAxios, axios)
@@ -24,6 +26,11 @@ export default new Vuex.Store({
   getters: {},
   mutations: {
     updateAppState(state, appState) {
+      appState.clients.forEach(function (c) {
+        c.messages = []
+        c.messageBuffer = new Deque(100)
+        c.socket = null
+      })
       state.app_state = appState
       state.transient.serversMap = state.app_state.servers.reduce((o, e) => { o[e.id] = e; return o }, {})
       state.transient.clientsMap = state.app_state.clients.reduce((o, e) => { o[e.id] = e; return o }, {})

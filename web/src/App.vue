@@ -15,7 +15,10 @@
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
           <el-menu-item v-for="server in servers" @click="handleSelect(true, server.id)" :key="server.id" :index="'1-' + server.id" style="padding-left: 48px;">
-            {{ server.name }}
+            <div style="display: flex; flex-direction: row; justify-content: space-between;">
+              <span>{{ server.name }}</span>
+              <span :style="{color: server.varz === null ? '#F56C6C' : '#67C23A'}">●</span>
+            </div>
           </el-menu-item>
           <!-- </el-menu-item-group> -->
           <el-menu-item index="2" ref="clients" @click="handleSelect(false, -1)">

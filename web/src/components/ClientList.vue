@@ -7,18 +7,12 @@
       </el-breadcrumb>
     </el-header>
     <el-main style="padding: 0px;">
-      <el-table :data="tableData" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true">
-        <el-table-column fixed prop="date" label="Date" width="150">
+      <el-table :data="clients" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true">
+        <el-table-column fixed prop="name" label="Name" width="150">
         </el-table-column>
-        <el-table-column prop="name" label="Name" width="120">
+        <el-table-column prop="server.hostname" label="Server Address" width="120">
         </el-table-column>
-        <el-table-column prop="state" label="State" width="120">
-        </el-table-column>
-        <el-table-column prop="city" label="City" width="120">
-        </el-table-column>
-        <el-table-column prop="address" label="Address" resizable>
-        </el-table-column>
-        <el-table-column prop="zip" label="Zip" width="120">
+        <el-table-column prop="" label="Status" width="120">
         </el-table-column>
         <el-table-column label="Operations" width="120">
           <template slot-scope="scope">
@@ -33,7 +27,22 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
+
 export default {
+  computed: {
+    ...mapState({
+      clients: function(s) {
+        let cl = []
+        for (var i in s.app_state.clients) {
+          let c = JSON.parse(JSON.stringify(s.app_state.clients[i]))
+          c.server = s.transient.serversMap[c.server_id]
+          cl.push(c)
+        }
+        return cl
+      }
+    })
+  },
   data: () => {
     return {
       tableData: [

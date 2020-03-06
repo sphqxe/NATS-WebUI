@@ -7,7 +7,7 @@
         <el-breadcrumb-item>{{server.name}}</el-breadcrumb-item>
       </el-breadcrumb>
     </el-header>
-    <el-main style="display: flex; flex-direction: row; padding: 0px;">
+    <el-main style="display: flex; flex-direction: row; padding: 0px; flex: 1 1 100%;">
       <div id="details" style="flex: 1 1 100%; text-align: left; padding: 0px 24px;">
         <div style="display: flex; align-items: flex-end; margin-bottom: 12px;">
           <h1 style="font-size: 3em; margin: 0px;">
@@ -271,9 +271,11 @@
           </div>
         </div>
       </div>
-      <div id="subjects" style="flex: 1 0 360px; padding: 24px; text-align: left;">
-        <h1>Server Subject Hierarchy</h1>
-        <el-button type="text" @click="editSubjectHierarchy">Edit</el-button>
+      <div id="subjects" style="flex: 1 0 360px; padding: 0px; text-align: left; overflow-y: auto;">
+        <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding-right: 24px;">
+          <h1 style="margin: 8px 0px;">Server Subject Hierarchy</h1>
+          <el-button @click="editSubjectHierarchy" icon="el-icon-edit">Edit</el-button>
+        </div>
         <el-tree :data="server.subjects" empty-text="No subjects configured for this server." default-expand-all
           :props="{label: 'subject_str', children: 'subjects', disabled: false, isLeaf: checkIsLeaf}">
         </el-tree>
@@ -289,7 +291,9 @@
       </div>
     </el-main>
     <el-dialog title="Edit Subject Tree" :visible.sync="subjectHierarchyDialogVisible" width="30%" style="height: auto;" center>
-      <prism-editor v-model="tabtree" language="md"></prism-editor>
+      <div style="overflow-y: auto; max-height: 50vh;">
+        <prism-editor v-model="tabtree" language="md"></prism-editor>
+      </div>
       <span slot="footer" class="dialog-footer">
         <el-button @click="subjectHierarchyDialogVisible = false">Cancel</el-button>
         <el-button type="primary" @click="saveSubjectTree">Save</el-button>
@@ -463,16 +467,16 @@ export default {
           x: dt,
           y: this.out_bytes_rate
         })
-        if (this.msgs_in_series.length > 3600) {
+        if (this.msgs_in_series.length > 600) {
           this.msgs_in_series = this.msgs_in_series.slice(this.msgs_in_series.length - 61)
         }
-        if (this.msgs_out_series.length > 3600) {
+        if (this.msgs_out_series.length > 600) {
           this.msgs_out_series = this.msgs_out_series.slice(this.msgs_out_series.length - 61)
         }
-        if (this.bytes_in_series.length > 3600) {
+        if (this.bytes_in_series.length > 600) {
           this.bytes_in_series = this.bytes_in_series.slice(this.bytes_in_series.length - 61)
         }
-        if (this.msgs_in_series.length > 3600) {
+        if (this.msgs_in_series.length > 600) {
           this.bytes_out_series = this.bytes_out_series.slice(this.bytes_out_series.length - 61)
         }
         this.$refs.chart1.updateSeries([
@@ -516,7 +520,7 @@ export default {
     },
     async saveSubjectTree() {
       let server = JSON.parse(JSON.stringify(this.server))
-      server.subjects = this.tabdownTreeToSubjectTree(tabdown.parse(this.tabtree.replace(/ {2}/g, '\t').split('\n'), '\t'))
+      server.subjects = this.tabdownTreeToSubjectTree(tabdown.parse(this.tabtree.replace(/ {2}/g, '\t').split('\n'), '\t'), "")
       await this.updateServer(server)
       await this.getAppState()
       this.subjectHierarchyDialogVisible = false
@@ -548,13 +552,14 @@ export default {
       }
       return node
     },
-    tabdownTreeToSubjectTree(tree) {
+    tabdownTreeToSubjectTree(tree, idPrefix) {
       let subjectTreeNodes = []
       for (var i in tree.children) {
         let node = tree.children[i]
         let subjectTreeNode = {
+          id: idPrefix + i.toString(),
           subject_str: node.data,
-          subjects: this.tabdownTreeToSubjectTree(node)
+          subjects: this.tabdownTreeToSubjectTree(node, idPrefix + i.toString() + "-")
         }
         subjectTreeNodes.push(subjectTreeNode)
       }

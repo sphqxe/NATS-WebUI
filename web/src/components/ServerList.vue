@@ -9,7 +9,7 @@
         Add Server
       </el-button>
     </el-header>
-    <el-main>
+    <el-main style="padding: 0px 20px; overflow-y: auto;">
       <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectServer">
         <!-- <el-table-column fixed prop="date" label="Date" width="150">
         </el-table-column> -->
@@ -17,19 +17,23 @@
           No servers configured. <br>
           <span @click="openCreateServerForm(null)">Create</span> a new one.
         </div>
-        <el-table-column prop="name" label="Name" resizable>
+        <el-table-column prop="name" label="Name" width="150">
         </el-table-column>
         <el-table-column prop="host" label="Hostname" resizable>
         </el-table-column>
-        <el-table-column prop="port" label="Port" width="160">
+        <el-table-column prop="port" label="Port" width="90">
         </el-table-column>
         <el-table-column prop="monitoring_port" label="Monitoring Port" width="160">
         </el-table-column>
         <el-table-column prop="varz.connections" label="Connections" width="120">
         </el-table-column>
-        <el-table-column prop="varz.in_msgs" label="Messages In" width="120">
+        <el-table-column prop="varz.in_msgs" :formatter="numericFormatter" label="Messages In" width="120">
         </el-table-column>
-        <el-table-column prop="varz.out_msgs" label="Messages Out" width="120">
+        <el-table-column prop="varz.out_msgs" :formatter="numericFormatter" label="Messages Out" width="120">
+        </el-table-column>
+        <el-table-column prop="varz.in_bytes" :formatter="bytesFormatter" label="Bytes In" width="90">
+        </el-table-column>
+        <el-table-column prop="varz.out_bytes" :formatter="bytesFormatter" label="Bytes Out" width="90">
         </el-table-column>
         <el-table-column label="Status" width="120">
           <template slot-scope="scope">
@@ -75,6 +79,8 @@
 <script>
 import { mapState, mapActions } from 'vuex'
 import ReconnectingWebSocket from 'reconnecting-websocket'
+
+var numeral = require('numeral')
 
 export default {
   data: () => {
@@ -129,6 +135,12 @@ export default {
     },
     async removeServer(idx) {
       await this.deleteServer(this.servers[idx].id)
+    },
+    numericFormatter(row, col, cellValue) {
+      return numeral(cellValue).format('0.[00]a')
+    },
+    bytesFormatter(row, col, cellValue) {
+      return numeral(cellValue).format('0.00b')
     }
   },
   mounted () {
@@ -136,6 +148,12 @@ export default {
     this.socket.addEventListener('message', function (ev) {
       let msg = JSON.parse(ev.data)
       this.serversMap[msg.server_id].varz = msg.varz
+      if (this.serversMap[msg.server_id].timeoutId !== undefined) {
+        window.clearTimeout(this.serversMap[msg.server_id].timeoutId)
+      }
+      this.serversMap[msg.server_id].timeoutId = window.setTimeout(function() {
+        this.serversMap[msg.server_id].varz = null
+      }, 5000)
     }.bind(this))
   }
 }

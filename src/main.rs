@@ -179,7 +179,6 @@ async fn get_state(
     let mut st = state.lock().await;
     st.set_servers(svs);
     st.set_clients(cls);
-    info!("{:?}", st);
     Ok(warp::reply::json(&st.clone()))
 }
 

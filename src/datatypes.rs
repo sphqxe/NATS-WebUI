@@ -59,6 +59,7 @@ pub struct VarzBroadcastMessage {
 
 #[derive(Clone, Serialize, Deserialize, Debug, Eq, PartialEq)]
 pub struct SubjectTreeNode {
+    id: String,
     subject_str: String,
     subjects: Vec<SubjectTreeNode>,
 }

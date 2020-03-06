@@ -1,37 +1,36 @@
 <template>
   <el-container style="display: flex; flex-direction: row;">
     <el-container style="flex: 1 0 50%;">
-      <el-header style="border-bottom: 1px solid #e6e6e6; text-align: left; display: flex; flex-direction: column; padding: 8px; height: auto;">
-        <div style="display: flex; flex-direction: row; margin-bottom: 8px;">
-          <el-input placeholder="Client Name" v-model="client.name" style="margin-right: 8px; flex: 1 1 30%;"></el-input>
+      <el-header style="border-bottom: 1px solid #e6e6e6; text-align: left; display: flex; flex-direction: column; padding: 0px; height: auto;">
+        <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle; padding: 24px 24px 12px 24px; flex: 0 0 auto;" >
+          <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
+          <el-breadcrumb-item>Clients</el-breadcrumb-item>
+          <el-breadcrumb-item>{{ client.name }}</el-breadcrumb-item>
+        </el-breadcrumb>
+        <div style="display: flex; flex-direction: row; margin-bottom: 8px; padding: 0px 8px;">
+          <el-input placeholder="Client Name" v-model="client.name" style="margin-right: 8px; flex: 1 1 30%;" @change="handleNameChange"></el-input>
           <el-select v-model="client.server_id" placeholder="Choose a server" style="margin-right: 8px; flex: 1 1 100%;" @change="handleSelectServer">
             <el-option v-for="server in servers" :key="server.id" :label="server.name" :value="server.id" :value-key="server.id">
             </el-option>
           </el-select>
-          <el-button v-if="this.socket === null" round plain @click="connect">
+          <el-button v-if="client.socket === null" round plain @click="connect">
             <font-awesome-icon :icon="['fas', 'link']"/>
           </el-button>
-          <el-button v-if="this.socket !== null" type="success" round @click="disconnect">
+          <el-button v-if="client.socket !== null" type="success" round @click="disconnect">
             <font-awesome-icon :icon="['fas', 'unlink']"/>
           </el-button>
         </div>
-        <div style="flex: 1 1 auto; display: flex; flex-direction: row; margin-left: 8px;">
-          <el-checkbox label="Info" v-model="client.info"></el-checkbox>
-          <el-checkbox label="Ping" v-model="client.ping"></el-checkbox>
-          <el-checkbox label="Pong" v-model="client.pong"></el-checkbox>
-          <el-checkbox label="OK" v-model="client.ok"></el-checkbox>
-          <el-checkbox label="Err" v-model="client.err"></el-checkbox>
-          <el-checkbox label="Msg" v-model="client.msg"></el-checkbox>
+        <div style="flex: 1 1 auto; display: flex; flex-direction: row; margin-left: 8px; padding: 0px 8px 8px 8px;">
+          <el-checkbox label="Info" v-model="client.info" @change="handleFilterCheckChange"></el-checkbox>
+          <el-checkbox label="Ping" v-model="client.ping" @change="handleFilterCheckChange"></el-checkbox>
+          <el-checkbox label="Pong" v-model="client.pong" @change="handleFilterCheckChange"></el-checkbox>
+          <el-checkbox label="OK" v-model="client.ok" @change="handleFilterCheckChange"></el-checkbox>
+          <el-checkbox label="Err" v-model="client.err" @change="handleFilterCheckChange"></el-checkbox>
+          <el-checkbox label="Msg" v-model="client.msg" @change="handleFilterCheckChange"></el-checkbox>
         </div>
       </el-header>
       <el-main style="padding: 0px;">
-        <!-- <div style="height: 100%; overflow-y: auto;">
-          <div v-for="(message, idx) in messages" :key="idx" style="font-size: small; text-align: left; border-bottom: 1px solid rgb(245, 245, 245);">
-            {{ message }}
-          </div>
-        </div> -->
-
-        <el-table id="message-log" :data="messages" height="100%" style="width: 100%" fit>
+        <el-table id="message-log" :data="client.messages" height="100%" style="width: 100%" fit>
           <div slot="empty">
             No messages to show.
           </div>
@@ -42,9 +41,9 @@
         </el-table>
       </el-main>
     </el-container>
-    <el-aside style="border-left: 1px solid #e6e6e6; flex: 1 0 120px;">
-      <h1>Server Subject Hierarchy</h1>
-      <el-tree ref="tree" :data="server.subjects" empty-text="No subjects configured for this server." default-expand-all node-key="subject_str"
+    <el-aside style="border-left: 1px solid #e6e6e6; flex: 1 0 120px; padding: 12px;">
+      <h1 style="text-align: left; font-size: 1em; margin: 8px 0px;">Server Subject Hierarchy</h1>
+      <el-tree ref="tree" :data="server.subjects" empty-text="No subjects configured for this server." default-expand-all node-key="id"
         :props="{label: 'subject_str', children: 'subjects', disabled: false, isLeaf: checkIsLeaf}" show-checkbox @check="handleCheckChange" :default-checked-keys="checkedKeys">
       </el-tree>
     </el-aside>
@@ -56,55 +55,9 @@ import { mapState, mapActions } from 'vuex'
 import ReconnectingWebSocket from 'reconnecting-websocket'
 import moment from 'moment'
 
-var Deque = require("double-ended-queue")
-
 export default {
   data: () => {
     return {
-      msgTypes: [],
-      value: 1,
-      data: [{
-        id: 1,
-        label: 'Level one 1',
-        children: [{
-          id: 4,
-          label: 'Level two 1-1',
-          children: [{
-            id: 9,
-            label: 'Level three 1-1-1'
-          }, {
-            id: 10,
-            label: 'Level three 1-1-2'
-          }]
-        }]
-      }, {
-        id: 2,
-        label: 'Level one 2',
-        children: [{
-          id: 5,
-          label: 'Level two 2-1'
-        }, {
-          id: 6,
-          label: 'Level two 2-2'
-        }]
-      }, {
-        id: 3,
-        label: 'Level one 3',
-        children: [{
-          id: 7,
-          label: 'Level two 3-1'
-        }, {
-          id: 8,
-          label: 'Level two 3-2'
-        }]
-      }],
-      defaultProps: {
-        children: 'children',
-        label: 'label'
-      },
-      messages: [],
-      socket: null,
-      messageBuffer: new Deque(100)
     }
   },
   computed: {
@@ -126,7 +79,7 @@ export default {
         let res = []
         function getCheckedKeys(node) {
           if (node.subjects.length === 0) {
-            res.push(node.subject_str)
+            res.push(node.id)
           } else {
             for (var i in node.subjects) {
               let child = node.subjects[i]
@@ -144,28 +97,32 @@ export default {
   },
   methods: {
     ...mapActions(['updateClient', 'getAppState']),
-    selectServer(id) {
-      this.value = id
-    },
     connect() {
-      this.socket = new ReconnectingWebSocket("ws://" + window.location.hostname + "/client/1")
-      this.socket.addEventListener('message', this.handleSocketEvent)
+      this.client.socket = new ReconnectingWebSocket("ws://" + window.location.hostname + "/client/1")
+      this.client.socket.addEventListener('message', this.handleSocketEvent(this.client))
     },
     disconnect() {
-      this.socket.close()
-      this.socket = null
+      this.client.socket.close()
+      this.client.socket = null
     },
-    handleSocketEvent(ev) {
-      let data = JSON.parse(ev.data)
-      this.lastTimestamp = data.timestamp
-      data.timestamp = moment(data.timestamp).format("YYYY-MM-DD HH:mm:ss.SSS")
-      if (this.messageBuffer.length == 100) {
-        this.messageBuffer.shift()
+    handleSocketEvent(cl) {
+      return function (ev) {
+        let data = JSON.parse(ev.data)
+        data.timestamp = moment(data.timestamp).format("YYYY-MM-DD HH:mm:ss.SSS")
+        if (data.typ === 'Msg' && cl.msg
+          || data.typ === 'Info' && cl.info
+          || data.typ === 'Ping' && cl.ping
+          || data.typ === 'Pong' && cl.pong
+          || data.typ === 'Ok' && cl.ok
+          || data.typ === 'Err' && cl.err) {
+            if (cl.messageBuffer.length == 100) {
+              cl.messageBuffer.shift()
+            }
+            cl.messageBuffer.push(data)
+        }
       }
-      this.messageBuffer.push(data)
     },
     async handleSelectServer(serverId) {
-      console.log(serverId)
       let client = JSON.parse(JSON.stringify(this.client))
       client.subjects = []
       client.server_id = serverId
@@ -176,22 +133,25 @@ export default {
       return false
     },
     async handleCheckChange() {
-      console.log('handleCheckChange called')
+      if (this.client.socket !== null) {
+        this.disconnect()
+      }
+
       let halfChecked = new Set()
       this.$refs.tree.getHalfCheckedNodes().forEach(function (e) {
-        halfChecked.add(e.subject_str)
+        halfChecked.add(e.id)
       })
       let checked = new Set()
       this.$refs.tree.getCheckedNodes().forEach(function (e) {
-        checked.add(e.subject_str)
+        checked.add(e.id)
       })
       let roots = JSON.parse(JSON.stringify(this.$refs.tree.getHalfCheckedNodes().filter(e => this.subjectRoots.has(e.subject_str))))
       function removeUnchecked(node) {
-        if (halfChecked.has(node.subject_str)) {
-          node.subjects = node.subjects.filter(e => halfChecked.has(e.subject_str) || checked.has(e.subject_str))
+        if (halfChecked.has(node.id)) {
+          node.subjects = node.subjects.filter(e => halfChecked.has(e.id) || checked.has(e.id))
           for (var i in node.subjects) {
             let child = node.subjects[i]
-            if (halfChecked.has(child.subject_str)) {
+            if (halfChecked.has(child.id)) {
               removeUnchecked(child)
             }
           }
@@ -205,34 +165,50 @@ export default {
         }
       }.bind(this))
       let client = JSON.parse(JSON.stringify(this.client))
-      client.subjects = roots;
+      client.subjects = roots
       await this.updateClient(client)
       await this.getAppState()
+    },
+    async handleNameChange(newName) {
+      if (this.client.socket !== null) {
+        this.disconnect()
+      }
+
+      let client = JSON.parse(JSON.stringify(this.client))
+      client.name = newName
+      await this.updateClient(client)
+    },
+    async handleFilterCheckChange() {
+      let client = JSON.parse(JSON.stringify(this.client))
+      await this.updateClient(client)
     }
   },
   mounted () {
     window.setInterval(function () {
-      if (this.messageBuffer.length > 0) {
-        if (this.messageBuffer.length === 100) {
-          this.messages = this.messageBuffer.toArray()
-        } else {
-          let updated = this.messages.concat(this.messageBuffer.toArray())
-          if (updated.length > 100) {
-            updated.slice(updated.length - 100);
+      if (this.client !== undefined) {
+        if (this.client.messageBuffer.length > 0) {
+          if (this.client.messageBuffer.length === 100) {
+            this.client.messages = this.client.messageBuffer.toArray()
+          } else {
+            let updated = this.client.messages.concat(this.client.messageBuffer.toArray())
+            if (updated.length > 100) {
+              updated.slice(updated.length - 100);
+            }
+            this.client.messages = updated
+            
           }
-          this.messages = updated
-          
+          this.client.messageBuffer.clear()
         }
-        this.messageBuffer.clear()
       }
-      
     }.bind(this),1000)
 
     window.setInterval(function () {
-      if (this.socket !== null) {
-        let list = this.$el.querySelector("div.el-table__body-wrapper.is-scrolling-none")
-        if (list !== null) {
-          list.scrollTop = list.scrollHeight
+      if (this.client !== undefined) {
+        if (this.client.socket !== null) {
+          let list = this.$el.querySelector("div.el-table__body-wrapper.is-scrolling-none")
+          if (list !== null) {
+            list.scrollTop = list.scrollHeight
+          }
         }
       }
     }.bind(this), 200)
