@@ -1,24 +1,30 @@
 <template>
-  <el-container style="padding: 0px;">
-    <el-header style="padding: 24px;">
-      <el-breadcrumb separator-class="el-icon-arrow-right" >
+  <el-container>
+    <el-header style="padding: 12px; display: flex; flex-direction: row; justify-content: space-between; height: 60px;">
+      <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle; padding: 12px;">
         <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
         <el-breadcrumb-item>Clients</el-breadcrumb-item>
       </el-breadcrumb>
+      <el-tooltip class="item" effect="dark" content="You must have configure at least 1 server before adding a client." placement="bottom-end" :disabled="servers.length!==0">
+        <el-button @click.native.stop="handleCreateNewClient()" icon="el-icon-plus" size="small" :disabled="servers.length === 0">
+          Add Client
+        </el-button>
+      </el-tooltip>
     </el-header>
-    <el-main style="padding: 0px;">
+    <el-main style="padding: 0px 20px;">
       <el-table :data="clients" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true">
         <el-table-column fixed prop="name" label="Name" width="150">
         </el-table-column>
-        <el-table-column prop="server.hostname" label="Server Address" width="120">
+        <el-table-column prop="server.hostname" label="Server Address" resizable>
         </el-table-column>
         <el-table-column prop="" label="Status" width="120">
         </el-table-column>
         <el-table-column label="Operations" width="120">
           <template slot-scope="scope">
-            <el-button @click.native.prevent="deleteRow(scope.$index, tableData)" type="text" size="small">
-              Remove
-            </el-button>
+            <!-- <el-popconfirm confirmButtonText='OK' cancelButtonText='Cancel' title="Confirm delete?"> -->
+              <el-button @click.native.stop="removeClient(scope.$index)" icon="el-icon-delete" size="small">
+              </el-button>
+            <!-- </el-popconfirm> -->
           </template>
         </el-table-column>
       </el-table>
@@ -27,7 +33,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState, mapActions } from 'vuex'
 
 export default {
   computed: {
@@ -36,73 +42,43 @@ export default {
         let cl = []
         for (var i in s.app_state.clients) {
           let c = JSON.parse(JSON.stringify(s.app_state.clients[i]))
-          c.server = s.transient.serversMap[c.server_id]
+          c.server = JSON.parse(JSON.stringify(s.transient.serversMap[c.server_id]))
           cl.push(c)
         }
         return cl
-      }
+      },
+      servers: s => s.app_state.servers
     })
   },
   data: () => {
     return {
-      tableData: [
-        {
-          date: '2016-05-03',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-02',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-04',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-01',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-08',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-06',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        },
-        {
-          date: '2016-05-07',
-          name: 'Tom',
-          state: 'California',
-          city: 'Los Angeles',
-          address: 'No. 189, Grove St, Los Angeles',
-          zip: 'CA 90036'
-        }
-      ]
+    }
+  },
+  methods: {
+    ...mapActions(['createClient', 'getAppState', 'deleteClient']),
+    async handleCreateNewClient() {
+      let cl = {
+        id: null,
+        name: "New Client",
+        server_id: this.servers[0].id,
+        subjects: [],
+        info: true,
+        ping: true,
+        pong: true,
+        ok: true,
+        err: true,
+        publ: true,
+        sub: true,
+        unsub: true,
+        connect: true,
+        msg: true
+      }
+      console.log(JSON.stringify(cl))
+      await this.createClient(cl)
+      await this.getAppState()
+    },
+    async removeClient(idx) {
+      await this.deleteClient(this.clients[idx].id)
     }
   }
 }
