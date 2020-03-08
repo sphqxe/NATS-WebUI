@@ -1,5 +1,5 @@
 use crate::datatypes::{NatsClient, NatsServer, Publication, SubjectTreeNode};
-use rusqlite::{params, Connection, Result, Error, RowIndex, types::FromSql};
+use rusqlite::{params, Connection, Result, Error};
 use serde_json;
 
 pub fn get_db_conn() -> rusqlite::Result<Connection> {
@@ -48,6 +48,7 @@ pub fn db_setup(conn: &Connection) -> Result<()> {
     Ok(())
 }
 
+#[allow(dead_code)]
 pub fn db_teardown(conn: &Connection) -> Result<()> {
     conn.execute("DROP TABLE servers", params![])?;
     conn.execute("DROP TABLE clients", params![])?;

@@ -3,8 +3,8 @@
     <el-container style="flex: 1 0 50%;">
       <el-header style="border-bottom: 1px solid #e6e6e6; text-align: left; display: flex; flex-direction: column; padding: 0px; height: auto;">
         <el-breadcrumb separator-class="el-icon-arrow-right" style="vertical-align: middle; padding: 24px 24px 12px 24px; flex: 0 0 auto;" >
-          <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
-          <el-breadcrumb-item>Clients</el-breadcrumb-item>
+          <el-breadcrumb-item @click.native="selectScreen({isServer: true, index: -1})" style="cursor: pointer">NATS-WebUI</el-breadcrumb-item>
+          <el-breadcrumb-item @click.native="selectScreen({isServer: false, index: -1})" style="cursor: pointer">Clients</el-breadcrumb-item>
           <el-breadcrumb-item>{{ client.name }}</el-breadcrumb-item>
         </el-breadcrumb>
         <div style="display: flex; flex-direction: row; margin-bottom: 8px; padding: 0px 8px;">
@@ -51,7 +51,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapMutations } from 'vuex'
 import ReconnectingWebSocket from 'reconnecting-websocket'
 import moment from 'moment'
 
@@ -97,6 +97,7 @@ export default {
   },
   methods: {
     ...mapActions(['updateClient', 'getAppState']),
+    ...mapMutations(['selectScreen']),
     connect() {
       this.client.socket = new ReconnectingWebSocket("ws://" + window.location.hostname + "/client/1")
       this.client.socket.addEventListener('message', this.handleSocketEvent(this.client))

@@ -2,8 +2,8 @@
   <el-container style="padding: 0px;">
     <el-header style="padding-top: 24px; padding-left: 24px;">
       <el-breadcrumb separator-class="el-icon-arrow-right">
-        <el-breadcrumb-item>NATS-WebUI</el-breadcrumb-item>
-        <el-breadcrumb-item>Servers</el-breadcrumb-item>
+        <el-breadcrumb-item @click.native="handleBreadcrumb()" style="cursor: pointer;">NATS-WebUI</el-breadcrumb-item>
+        <el-breadcrumb-item @click.native="handleBreadcrumb()" style="cursor: pointer">Servers</el-breadcrumb-item>
         <el-breadcrumb-item>{{server.name}}</el-breadcrumb-item>
       </el-breadcrumb>
     </el-header>
@@ -303,7 +303,7 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapActions, mapMutations } from 'vuex'
 import tabdown from 'tabdown-sacha'
 import PrismEditor from 'vue-prism-editor'
 import VueApexCharts from 'vue-apexcharts'
@@ -467,16 +467,16 @@ export default {
           x: dt,
           y: this.out_bytes_rate
         })
-        if (this.msgs_in_series.length > 600) {
+        if (this.msgs_in_series.length > 180) {
           this.msgs_in_series = this.msgs_in_series.slice(this.msgs_in_series.length - 61)
         }
-        if (this.msgs_out_series.length > 600) {
+        if (this.msgs_out_series.length > 180) {
           this.msgs_out_series = this.msgs_out_series.slice(this.msgs_out_series.length - 61)
         }
-        if (this.bytes_in_series.length > 600) {
+        if (this.bytes_in_series.length > 180) {
           this.bytes_in_series = this.bytes_in_series.slice(this.bytes_in_series.length - 61)
         }
-        if (this.msgs_in_series.length > 600) {
+        if (this.msgs_in_series.length > 180) {
           this.bytes_out_series = this.bytes_out_series.slice(this.bytes_out_series.length - 61)
         }
         this.$refs.chart1.updateSeries([
@@ -510,6 +510,7 @@ export default {
   },
   methods: {
     ...mapActions(['updateServer', 'getAppState']),
+    ...mapMutations(['selectScreen']),
     editSubjectHierarchy() {
       this.tabtree = ""
       tabdown.traverse(this.subjectTreeToTabdownTreeRoot(this.server.subjects), function (node) {
@@ -567,6 +568,9 @@ export default {
     },
     checkIsLeaf() {
       return false
+    },
+    handleBreadcrumb() {
+      this.selectScreen({isServer: true, index: -1})
     }
   }
 }

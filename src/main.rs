@@ -3,8 +3,8 @@ use warp::{Filter, Rejection};
 use std::sync::Arc;
 use tokio::sync::{broadcast, Mutex};
 use futures::stream::{select_all, FuturesUnordered};
-use log::info;
-use rusqlite::{Connection, Error};
+use log::{ info, error };
+use rusqlite::{Connection};
 use serde::Serialize;
 use std::fmt::Debug;
 use std::time::Duration;
@@ -47,7 +47,7 @@ async fn main() -> rusqlite::Result<()> {
 
     // Setup the database
     let db_conn = sql::get_db_conn()?;
-    sql::db_setup(&db_conn);
+    sql::db_setup(&db_conn)?;
     let db_conn_filter = warp::any().map(|| sql::db_conn());
 
     // Setup global app state for sharing between threads
@@ -186,10 +186,13 @@ async fn broadcast_transient_info(
     mut ws: WebSocket,
     rx: broadcast::Receiver<VarzBroadcastMessage>,
 ) {
-    ws.send_all(
+    match ws.send_all(
         &mut rx.map(|msg| Ok(Message::text(serde_json::to_string(&msg.unwrap()).unwrap()))),
     )
-    .await;
+    .await {
+        Ok(_) => (),
+        Err(e) => error!("Error in broadcasting app state: {:?}", e)
+    }
 }
 
 async fn get_server_varz(state: Arc<Mutex<App>>, tx: broadcast::Sender<VarzBroadcastMessage>) {
@@ -203,7 +206,10 @@ async fn get_server_varz(state: Arc<Mutex<App>>, tx: broadcast::Sender<VarzBroad
         .map(|s| NatsServer::get_varz(s.id.unwrap(), s.host.clone(), s.monitoring_port, &cl))
         .collect::<FuturesUnordered<_>>();
     while let Some(Ok(v)) = stream.next().await {
-        tx.send(v);
+        match tx.send(v) {
+            Ok(_) => (),
+            Err(e) => error!("Failed to send app state message over broadcast channel. Error: {:?}", e)
+        }
     }
 }
 
@@ -309,7 +315,7 @@ async fn handle_client_subscribe_request(client_id: i64, ws: warp::ws::Ws, conn:
 }
 
 async fn handle_client_subscription(mut ws: WebSocket, dest: Address, subjects: Vec<rants::Subject>) {
-    let client = rants::Client::new(vec![dest]);
+    let client = rants::Client::new(vec![dest.clone()]);
 
     client.connect_mut().await.echo(true);
     client.connect().await;
@@ -383,6 +389,8 @@ async fn handle_client_subscription(mut ws: WebSocket, dest: Address, subjects: 
         msg_stream,
     ]);
 
-    ws.send_all(&mut stream.map(|msg| Ok(Message::text(serde_json::to_string(&msg).unwrap()))))
-        .await;
+    match ws.send_all(&mut stream.map(|msg| Ok(Message::text(serde_json::to_string(&msg).unwrap())))).await {
+        Ok(_) => info!("Subscription to {:?} has ended.", dest),
+        Err(e) => error!("Error in subscription: {:?}.", e),
+    }
 }

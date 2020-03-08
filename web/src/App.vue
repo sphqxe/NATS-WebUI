@@ -6,29 +6,29 @@
           <img style="height: 48px;" src="large-logo.png">
           <div style=" width: fit-content; height: 40px; line-height: 40px; font-size: small; margin-top: -24px; padding-left: 180px; font-family: 'Lexend Mega';">WEB-UI</div>
         </div>
-        <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 1 1 100%; border-right: none;" ref="menu">
-          <el-menu-item index="1" ref="servers" @click="handleSelect(true, -1)">
+        <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 1 1 100%; border-right: none;" ref="menu" active-text-color="#303133">
+          <el-menu-item index="'1'" ref="servers" @click="handleSelect(true, -1)" :class="{active: server===true && index === -1}">
             <template slot="title">
               <font-awesome-icon :icon="['fas', 'server']" style="margin: 0px 8px;" />
               <span>Servers</span>
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item v-for="server in servers" @click="handleSelect(true, server.id)" :key="server.id" :index="'1-' + server.id" style="padding-left: 48px;">
+          <el-menu-item v-for="svr in servers" @click="handleSelect(true, svr.id)" :key="svr.id" :index="'1-' + svr.id" style="padding-left: 48px;"  :class="{active: server===true && index === svr.id}">
             <div style="display: flex; flex-direction: row; justify-content: space-between;">
-              <span>{{ server.name }}</span>
-              <span :style="{color: server.varz === null ? '#F56C6C' : '#67C23A'}">●</span>
+              <span>{{ svr.name }}</span>
+              <span :style="{color: svr.varz === null ? '#F56C6C' : '#67C23A'}">●</span>
             </div>
           </el-menu-item>
           <!-- </el-menu-item-group> -->
-          <el-menu-item index="2" ref="clients" @click="handleSelect(false, -1)">
+          <el-menu-item index="2" ref="clients" @click="handleSelect(false, -1)" :class="{active: server===false && index===-1}">
             <template slot="title">
               <font-awesome-icon :icon="['fas', 'desktop']" style="margin: 0px 8px;" />
               <span>Clients</span>
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item v-for="client in clients" :index="'2-' + client.id" @click="handleSelect(false, client.id)" :key="client.id" style="padding-left: 48px;">
+          <el-menu-item v-for="client in clients" :index="'2-' + client.id" @click="handleSelect(false, client.id)" :key="client.id" style="padding-left: 48px;" :class="{active: server===false && index===client.id}">
             {{ client.name }}
           </el-menu-item>
           <!-- </el-menu-item-group> -->
@@ -51,7 +51,7 @@ import ServerList from './components/ServerList.vue'
 import ClientList from './components/ClientList.vue'
 import Client from './components/Client.vue'
 import Monitor from './components/Monitor.vue'
-import { mapState } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
 
 export default {
   name: 'App',
@@ -63,36 +63,28 @@ export default {
   },
   data: () => {
     return {
-      activeIndex: '1',
-      server: true,
-      index: -1
+      activeIndex: '1'
     }
   },
   methods: {
+    ...mapMutations(['selectScreen']),
     handleSelectServer(i) {
-      this.handleSelect(true, i)
+      this.selectScreen({isServer: true, index: i})
     },
     handleSelect(server, i) {
-      this.server = server;
-      this.index = i;
-      if (server) {
-        this.$store.state.transient.selectedServer = i
-      } else {
-        this.$store.state.transient.selectedClient = i
-      }
-    },
-    selectMainPage() {
-
+      this.selectScreen({isServer: server, index: i})
     }
   },
   mounted() {
-    this.$refs.menu.open(1)
-    this.$refs.menu.open(2)
+    this.$refs.menu.open('1')
   }, 
   computed: {
     ...mapState ({
       servers: s => s.app_state.servers,
-      clients: s => s.app_state.clients
+      clients: s => s.app_state.clients,
+      server: s => s.transient.server,
+      index: s => s.transient.index,
+      screen: s => [s.transient.server, s.transient.index]
     })
   }
 }
@@ -129,5 +121,9 @@ h1, h2, h3, h4, h5, h6 {
 
 .el-select-dropdown__item {
   font-family: Avenir, Helvetica, Arial, sans-serif;
+}
+
+.active {
+  background: #ECF5FF;
 }
 </style>

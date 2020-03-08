@@ -20,7 +20,9 @@ export default new Vuex.Store({
       serversMap: {},
       clientsMap: {},
       selectedServer: 1,
-      selectedClient: 1
+      selectedClient: 1,
+      server: true,
+      index: -1
     }
   },
   getters: {},
@@ -34,6 +36,15 @@ export default new Vuex.Store({
       state.app_state = appState
       state.transient.serversMap = state.app_state.servers.reduce((o, e) => { o[e.id] = e; return o }, {})
       state.transient.clientsMap = state.app_state.clients.reduce((o, e) => { o[e.id] = e; return o }, {})
+    },
+    selectScreen(state, {isServer, index}) {
+      state.transient.server = isServer
+      state.transient.index = index
+      if (isServer) {
+        state.transient.selectedServer = index
+      } else {
+        state.transient.selectedClient = index
+      }
     }
   },
   actions: {
