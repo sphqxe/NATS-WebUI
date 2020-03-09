@@ -44,7 +44,8 @@
     <el-aside style="border-left: 1px solid #e6e6e6; flex: 1 0 120px; padding: 12px;">
       <h1 style="text-align: left; font-size: 1em; margin: 8px 0px;">Server Subject Hierarchy</h1>
       <el-tree ref="tree" :data="server.subjects" empty-text="No subjects configured for this server." default-expand-all node-key="id"
-        :props="{label: 'subject_str', children: 'subjects', disabled: false, isLeaf: checkIsLeaf}" show-checkbox @check="handleCheckChange" :default-checked-keys="checkedKeys">
+        :props="{label: 'subject_str', children: 'subjects', disabled: false, isLeaf: checkIsLeaf}" 
+        show-checkbox @check="handleCheckChange" :default-checked-keys="checkedKeys" check-strictly>
       </el-tree>
     </el-aside>
   </el-container>
@@ -78,13 +79,12 @@ export default {
         let subjects = s.transient.clientsMap[s.transient.selectedClient].subjects
         let res = []
         function getCheckedKeys(node) {
-          if (node.subjects.length === 0) {
+          if (node.selected) {
             res.push(node.id)
-          } else {
-            for (var i in node.subjects) {
-              let child = node.subjects[i]
-              getCheckedKeys(child)
-            }
+          }
+          for (var i in node.subjects) {
+            let child = node.subjects[i]
+            getCheckedKeys(child)
           }
         }
         for (var i in subjects) {
@@ -138,33 +138,21 @@ export default {
         this.disconnect()
       }
 
-      let halfChecked = new Set()
-      this.$refs.tree.getHalfCheckedNodes().forEach(function (e) {
-        halfChecked.add(e.id)
-      })
       let checked = new Set()
       this.$refs.tree.getCheckedNodes().forEach(function (e) {
         checked.add(e.id)
       })
-      let roots = JSON.parse(JSON.stringify(this.$refs.tree.getHalfCheckedNodes().filter(e => this.subjectRoots.has(e.subject_str))))
-      function removeUnchecked(node) {
-        if (halfChecked.has(node.id)) {
-          node.subjects = node.subjects.filter(e => halfChecked.has(e.id) || checked.has(e.id))
-          for (var i in node.subjects) {
-            let child = node.subjects[i]
-            if (halfChecked.has(child.id)) {
-              removeUnchecked(child)
-            }
-          }
+
+      let roots = JSON.parse(JSON.stringify(this.client.subjects))
+      function setSelected(node) {
+        node.selected = checked.has(node.id)
+        for (var i in node.subjects) {
+          let child = node.subjects[i]
+          setSelected(child)
         }
       }
 
-      roots.forEach(node => removeUnchecked(node))
-      this.$refs.tree.getCheckedNodes().forEach(function (e) {
-        if (this.subjectRoots.has(e.subject_str)) {
-          roots.push(e)
-        }
-      }.bind(this))
+      roots.forEach(node => setSelected(node))
       let client = JSON.parse(JSON.stringify(this.client))
       client.subjects = roots
       await this.updateClient(client)

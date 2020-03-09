@@ -62,22 +62,27 @@ pub struct SubjectTreeNode {
     id: String,
     subject_str: String,
     subjects: Vec<SubjectTreeNode>,
+    selected: bool
 }
 
 impl SubjectTreeNode {
     fn get_subscriptions(&self, tokens: &mut Vec<String>, subscriptions: &mut Vec<Subject>) {
         tokens.push(self.subject_str.clone());
         let mut builder = SubjectBuilder::new();
-        if self.subjects.is_empty() {
+
+        if self.selected {
             for token in tokens.iter() {
                 builder = builder.add(token.clone());
             }
             subscriptions.push(builder.build());
-        } else {
+        }
+
+        if !self.subjects.is_empty() {
             for s in self.subjects.iter() {
                 s.get_subscriptions(tokens, subscriptions);
             }
         }
+
         tokens.pop();
     }
 }

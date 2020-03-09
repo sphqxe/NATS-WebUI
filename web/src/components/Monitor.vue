@@ -560,7 +560,8 @@ export default {
         let subjectTreeNode = {
           id: idPrefix + i.toString(),
           subject_str: node.data,
-          subjects: this.tabdownTreeToSubjectTree(node, idPrefix + i.toString() + "-")
+          subjects: this.tabdownTreeToSubjectTree(node, idPrefix + i.toString() + "-"),
+          selected: false
         }
         subjectTreeNodes.push(subjectTreeNode)
       }
