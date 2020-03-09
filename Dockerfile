@@ -13,7 +13,7 @@ RUN npm run build --release
 FROM debian:buster-slim
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev libsqlite3-0
 RUN mkdir /usr/local/bin/nats && mkdir /usr/local/bin/nats/web && mkdir /usr/local/bin/nats/web/dist
-COPY --from=backend-builder /usr/src/NATS-WebUI/target/release/NATS-WebUI /usr/local/bin/nats/NATS-WebUI
+COPY --from=backend-builder /usr/src/NATS-WebUI/target/release/nats-webui /usr/local/bin/nats/nats-webui
 COPY --from=frontend-builder /usr/src/NATS-WebUI/web/dist/ /usr/local/bin/nats/web/dist
 EXPOSE 80
-CMD ["/usr/local/bin/nats/NATS-WebUI"]
+CMD ["/usr/local/bin/nats/nats-webui"]
