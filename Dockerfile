@@ -14,7 +14,7 @@ FROM debian:buster-slim
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev libsqlite3-0
 RUN mkdir /usr/local/bin/nats
 WORKDIR /usr/local/bin/nats
-RUN mkdir nats/web && mkdir nats/web/dist
+RUN mkdir web && mkdir web/dist
 COPY --from=backend-builder /usr/src/NATS-WebUI/target/release/nats-webui nats-webui
 COPY --from=frontend-builder /usr/src/NATS-WebUI/web/dist/ web/dist
 EXPOSE 80
