@@ -1,5 +1,5 @@
 use crate::datatypes::{NatsClient, NatsServer, Publication, SubjectTreeNode};
-use rusqlite::{params, Connection, Result, Error};
+use rusqlite::{params, Connection, Error, Result};
 use serde_json;
 
 pub fn get_db_conn() -> rusqlite::Result<Connection> {
@@ -215,16 +215,25 @@ pub fn delete_server(conn: &Connection, server_id: i64) -> Result<usize> {
     Ok(conn.execute("DELETE FROM servers WHERE id = ?1", params![server_id])?)
 }
 
-pub fn get_connection_triple(conn: &Connection, client_id: i64) -> Result<(String, u16, Vec<SubjectTreeNode>)> {
+pub fn get_connection_triple(
+    conn: &Connection,
+    client_id: i64,
+) -> Result<(String, u16, Vec<SubjectTreeNode>)> {
     let mut ps = conn.prepare("SELECT servers.host, servers.port, clients.subjects FROM clients INNER JOIN servers ON clients.server_id=servers.id WHERE clients.id = ?1")?;
-    let rs = ps.query_map(params![client_id], |row| {
-          let sbjs: String = row.get(2)?;
-          Ok((row.get::<usize, String>(0)?, row.get::<usize, u16>(1)?, serde_json::from_str::<Vec<SubjectTreeNode>>(&sbjs)
-            .expect("Failed to parse subject from SQL query as Vec<SubjectTreeNode>")))
-      })?
-      .into_iter()
-      .filter_map(Result::ok)
-      .next().ok_or(Error::QueryReturnedNoRows);
+    let rs = ps
+        .query_map(params![client_id], |row| {
+            let sbjs: String = row.get(2)?;
+            Ok((
+                row.get::<usize, String>(0)?,
+                row.get::<usize, u16>(1)?,
+                serde_json::from_str::<Vec<SubjectTreeNode>>(&sbjs)
+                    .expect("Failed to parse subject from SQL query as Vec<SubjectTreeNode>"),
+            ))
+        })?
+        .into_iter()
+        .filter_map(Result::ok)
+        .next()
+        .ok_or(Error::QueryReturnedNoRows);
     rs
 }
 

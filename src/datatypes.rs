@@ -62,7 +62,7 @@ pub struct SubjectTreeNode {
     id: String,
     subject_str: String,
     subjects: Vec<SubjectTreeNode>,
-    selected: bool
+    selected: bool,
 }
 
 impl SubjectTreeNode {
