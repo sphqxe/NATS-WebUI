@@ -11,6 +11,7 @@ RUN npm i
 RUN npm run build --release
 
 FROM debian:buster-slim
+MAINTAINER Theodore Lee <sphqxelzlt@gmail.com>
 RUN apt-get update && apt-get install -y ca-certificates libssl-dev libsqlite3-0
 RUN mkdir /usr/local/bin/nats
 WORKDIR /usr/local/bin/nats
