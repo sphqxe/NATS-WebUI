@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="/screenshots/Logo.png" alt="Sublime's custom image"/>
+  <img src="/screenshots/Logo.png" alt="NATS WebUI Logo"/>
 </p>
 
 NATS-WebUI
@@ -13,7 +13,7 @@ NATS-WebUI is a web app for monitoring messages on [NATS](https://nats.io/) publ
 - [Rants](https://github.com/davidMcneil/rants) Async NATS client
 
 ## Screenshots
-![Screenshot 2](/screenshots/screenshot2.png) ![Screenshot 3](/screenshots/screenshot3.png)
+![Screenshot 4](/screenshots/screenshot4.png) ![Screenshot 3](/screenshots/screenshot3.png)
 
 ## Installation
 ```docker run -p <port>:80 sphqxe/nats-webui```
