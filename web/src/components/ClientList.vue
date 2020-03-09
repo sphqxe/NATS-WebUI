@@ -13,6 +13,10 @@
     </el-header>
     <el-main style="padding: 0px 20px;">
       <el-table :data="clients" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectClient">
+        <div slot="empty">
+          No clients configured. <br>
+          <!-- <span @click="openCreateServerForm(null)">Create</span> a new one. -->
+        </div>
         <el-table-column fixed prop="name" label="Name" width="150">
         </el-table-column>
         <el-table-column prop="server_id" label="Server Address" :formatter="serverNameFormatter" resizable>
