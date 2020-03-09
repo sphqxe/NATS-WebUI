@@ -1217,6 +1217,7 @@ dependencies = [
 [[package]]
 name = "rants"
 version = "0.4.2"
+source = "git+https://github.com/sphqxe/rants.git?branch=subject-constructor#672ff0c1acd6044c843a38d7d65096dee2a1475f"
 dependencies = [
  "bytes 0.5.4",
  "futures",

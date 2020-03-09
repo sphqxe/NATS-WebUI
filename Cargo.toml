@@ -7,7 +7,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rants = { path = "../rants" }
+rants = { git = "https://github.com/sphqxe/rants.git", branch = "subject-constructor" }
 tokio = { version = "0.2", features = ["macros", "full", "rt-core", "sync", "time"] }
 warp = "0.2"
 log = "0.4"
