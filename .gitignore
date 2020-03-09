@@ -1,3 +1,4 @@
 /target
 .idea/*
 /sqlite.db
+/sqlite.db.BAK
