@@ -13,12 +13,16 @@
             <el-option v-for="server in servers" :key="server.id" :label="server.name" :value="server.id" :value-key="server.id">
             </el-option>
           </el-select>
-          <el-button v-if="client.socket === null" round plain @click="connect">
-            <font-awesome-icon :icon="['fas', 'link']"/>
-          </el-button>
-          <el-button v-if="client.socket !== null" type="success" round @click="disconnect">
-            <font-awesome-icon :icon="['fas', 'unlink']"/>
-          </el-button>
+          <el-tooltip class="item" effect="dark" content="Subscribe" placement="bottom" v-if="client.socket === null">
+            <el-button round plain @click="connect">
+              <font-awesome-icon :icon="['fas', 'link']"/>
+            </el-button>
+          </el-tooltip>
+          <el-tooltip class="item" effect="dark" content="Unsubscribe" placement="bottom" v-if="client.socket !== null">
+            <el-button type="success" round @click="disconnect">
+              <font-awesome-icon :icon="['fas', 'unlink']"/>
+            </el-button>
+          </el-tooltip>
         </div>
         <div style="flex: 1 1 auto; display: flex; flex-direction: row; margin-left: 8px; padding: 0px 8px 8px 8px;">
           <el-checkbox label="Info" v-model="client.info" @change="handleFilterCheckChange"></el-checkbox>

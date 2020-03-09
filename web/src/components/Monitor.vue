@@ -59,6 +59,32 @@
             <VueApexCharts style="flex: 1 1 50%;" v-show="msgs_in_series.length > 1" width="100%" height="180" type="area" ref="chart1" :options="chart1Options" :series="series1"></VueApexCharts>
             <VueApexCharts style="flex: 1 1 50%;" v-show="bytes_in_series.length > 1" width="100%" height="180" type="area" ref="chart2" :options="chart2Options" :series="series2"></VueApexCharts>
           </div>
+          <div class="metric-row">
+            <div class="metric-smaller">
+              <h1 class="metric-label">CPU Usage</h1>
+              <span class="metric-value-smaller">{{ server.varz.cpu | numeral('0.[00]a') }} %</span>
+            </div>
+            <div class="metric-smaller">
+              <h1 class="metric-label">Mem Usage</h1>
+              <span class="metric-value-smaller">{{ server.varz.mem | numeral('0.00b') }}</span>
+            </div>
+            <div class="metric-smaller">
+              <h1 class="metric-label">Connections</h1>
+              <span class="metric-value-smaller">{{ server.varz.connections }}</span>
+            </div>
+            <div class="metric-smaller">
+              <h1 class="metric-label">Subscriptions</h1>
+              <span class="metric-value-smaller">{{ server.varz.subscriptions }}</span>
+            </div>
+            <div class="metric-smaller">
+              <h1 class="metric-label">Slow Consumers</h1>
+              <span class="metric-value-smaller">{{ server.varz.slow_consumers }}</span>
+            </div>
+            <div class="metric-smaller">
+              <h1 class="metric-label">Uptime</h1>
+              <span class="metric-value-smaller">{{ server.varz.uptime }}</span>
+            </div>
+          </div>
           <div id="small-metrics" style="display: flex; flex-direction: row; flex-wrap: wrap;">
             <div class="small-metric">
               <span class="metric-label-small">
@@ -158,34 +184,10 @@
             </div>
             <div class="small-metric">
               <span class="metric-label-small">
-                Uptime
-              </span>
-              <span class="metric-value-small">
-                {{ server.varz.uptime }}
-              </span>
-            </div>
-            <div class="small-metric">
-              <span class="metric-label-small">
-                Memory Usage
-              </span>
-              <span class="metric-value-small">
-                {{ server.varz.mem | numeral('0.00b') }}
-              </span>
-            </div>
-            <div class="small-metric">
-              <span class="metric-label-small">
                 CPU Cores
               </span>
               <span class="metric-value-small">
                 {{ server.varz.cores }}
-              </span>
-            </div>
-            <div class="small-metric">
-              <span class="metric-label-small">
-                Current Connections
-              </span>
-              <span class="metric-value-small">
-                {{ server.varz.connections }}
               </span>
             </div>
             <div class="small-metric">
@@ -218,22 +220,6 @@
               </span>
               <span class="metric-value-small">
                 {{ server.varz.leafnodes }}
-              </span>
-            </div>
-            <div class="small-metric">
-              <span class="metric-label-small">
-                Slow Consumers
-              </span>
-              <span class="metric-value-small">
-                {{ server.varz.slow_consumers }}
-              </span>
-            </div>
-            <div class="small-metric">
-              <span class="metric-label-small">
-                Subscriptions
-              </span>
-              <span class="metric-value-small">
-                {{ server.varz.subscriptions }}
               </span>
             </div>
             <div class="small-metric">
@@ -588,6 +574,11 @@ span.metric-value {
   font-weight: 100;
 }
 
+span.metric-value-smaller {
+  font-size: 2em;
+  font-weight: 100;
+}
+
 .metric-row {
   display: flex; flex-direction: row nowrap;
   justify-content: space-between;
@@ -598,6 +589,12 @@ span.metric-value {
   display: flex;
   flex-direction: column;
   flex: 0 0 25%;
+}
+
+.metric-smaller {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 16%;
 }
 
 #small-metrics {
