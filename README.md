@@ -16,7 +16,7 @@ NATS-WebUI is a web app for monitoring messages on [NATS](https://nats.io/) publ
 ![Screenshot 4](/screenshots/screenshot4.png) ![Screenshot 3](/screenshots/screenshot3.png)
 
 ## Installation
-```docker run -p <port>:80 sphqxe/nats-webui```
+```docker run -d -p 80:80 sphqxe/nats-webui:latest```
 
 ## Usage
 - Add a server by entering its hostname, port, and monitoring port. The monitoring endpoint is called server-side, so the NATS server host must be resolvable and reachable from the server hosting the WebUI.
