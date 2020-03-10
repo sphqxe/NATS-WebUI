@@ -4,7 +4,7 @@
       <el-aside style="display: flex; flex-direction: column; border-right: 1px solid rgb(230, 230, 230);">
         <div style="padding: 24px 0px; flex: 0 0 auto;">
           <img style="height: 48px;" src="large-logo.png">
-          <div style=" width: fit-content; height: 40px; line-height: 40px; font-size: small; margin-top: -24px; padding-left: 180px; font-family: 'Lexend Mega';">WEB-UI</div>
+          <div style=" width: max-content; height: 40px; line-height: 40px; font-size: small; margin-top: -24px; padding-left: 180px; font-family: 'Lexend Mega';">WEB-UI</div>
         </div>
         <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 1 1 100%; border-right: none;" ref="menu" active-text-color="#303133">
           <el-menu-item index="'1'" ref="servers" @click="handleSelect(true, -1)" :class="{active: server===true && index === -1}">
