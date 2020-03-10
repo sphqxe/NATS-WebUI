@@ -6,7 +6,7 @@
           <img style="height: 48px;" src="large-logo.png">
           <div style=" width: max-content; height: 40px; line-height: 40px; font-size: small; margin-top: -24px; padding-left: 180px; font-family: 'Lexend Mega';">WEB-UI</div>
         </div>
-        <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 1 1 100%; border-right: none;" ref="menu" active-text-color="#303133">
+        <el-menu class="el-menu-vertical-demo" style="text-align: left; flex: 0 1 100%; border-right: none; overflow-y: auto;" ref="menu" active-text-color="#303133">
           <el-menu-item index="'1'" ref="servers" @click="handleSelect(true, -1)" :class="{active: server===true && index === -1}">
             <template slot="title">
               <font-awesome-icon :icon="['fas', 'server']" style="margin: 0px 8px;" />

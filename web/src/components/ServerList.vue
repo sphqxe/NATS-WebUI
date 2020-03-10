@@ -10,7 +10,7 @@
       </el-button>
     </el-header>
     <el-main style="padding: 0px 20px; overflow-y: auto;">
-      <el-table :data="servers" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectServer">
+      <el-table :data="servers" style="width: 100%; border-bottom: none;" :fit="true" @row-click="selectServer" height="100%">
         <!-- <el-table-column fixed prop="date" label="Date" width="150">
         </el-table-column> -->
         <div slot="empty">
