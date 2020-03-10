@@ -15,7 +15,6 @@
       <el-table :data="clients" style="width: 100%; border-bottom: none;" max-height="100%" :fit="true" @row-click="selectClient">
         <div slot="empty">
           No clients configured. <br>
-          <span v-if="server.length === 0">You must configure at least 1 server before adding a client.</span>
         </div>
         <el-table-column fixed prop="name" label="Name" width="150">
         </el-table-column>
