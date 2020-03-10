@@ -147,7 +147,7 @@ export default {
         checked.add(e.id)
       })
 
-      let roots = JSON.parse(JSON.stringify(this.client.subjects))
+      let roots = JSON.parse(JSON.stringify(this.server.subjects))
       function setSelected(node) {
         node.selected = checked.has(node.id)
         for (var i in node.subjects) {

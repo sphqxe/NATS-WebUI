@@ -14,7 +14,7 @@
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item v-for="svr in servers" @click="handleSelect(true, svr.id)" :key="svr.id" :index="'1-' + svr.id" style="padding-left: 48px;"  :class="{active: server===true && index === svr.id}">
+          <el-menu-item v-for="svr in servers" @click="handleSelect(true, svr.id)" :key="'server' + svr.id" :index="'1-' + svr.id" style="padding-left: 48px;"  :class="{active: server===true && index === svr.id}">
             <div style="display: flex; flex-direction: row; justify-content: space-between;">
               <span>{{ svr.name }}</span>
               <span :style="{color: svr.varz === null ? '#F56C6C' : '#67C23A'}">●</span>
@@ -28,7 +28,7 @@
             </template>
           </el-menu-item>
           <!-- <el-menu-item-group title="Group One"> -->
-          <el-menu-item v-for="client in clients" :index="'2-' + client.id" @click="handleSelect(false, client.id)" :key="client.id" style="padding-left: 48px;" :class="{active: server===false && index===client.id}">
+          <el-menu-item v-for="client in clients" :index="'2-' + client.id" @click="handleSelect(false, client.id)" :key="'client' + client.id" style="padding-left: 48px;" :class="{active: server===false && index===client.id}">
             {{ client.name }}
           </el-menu-item>
           <!-- </el-menu-item-group> -->
