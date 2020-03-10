@@ -256,6 +256,7 @@
             </div>
           </div>
         </div>
+        <div style="text-align: center; color: #909399; font-size: 14px;" v-else>The NATS Server could not be reached.</div>
       </div>
       <div id="subjects" style="flex: 1 0 360px; padding: 0px; text-align: left; overflow-y: auto;">
         <div style="display: flex; flex-direction: row; justify-content: space-between; align-items: center; padding-right: 24px;">
