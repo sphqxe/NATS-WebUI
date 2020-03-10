@@ -277,11 +277,11 @@
       </div>
     </el-main>
     <el-dialog title="Edit Subject Tree" :visible.sync="subjectHierarchyDialogVisible" width="30%" style="height: auto;" center>
-      <div style="overflow-y: auto; max-height: 50vh;">
-        <prism-editor v-model="tabtree" language="md"></prism-editor>
+      <div style="overflow-y: auto; overflow-x: auto; max-height: 50vh;">
+        <AceEditor width="100%" height="40vh" :fontSize="14" :showPrintMargin="true" :showGutter="true" :value="tabtree" mode="plain_text" theme="chrome" :onChange="handleSubjectHierarchyChange"></AceEditor>
       </div>
       <span slot="footer" class="dialog-footer">
-        <el-button @click="subjectHierarchyDialogVisible = false">Cancel</el-button>
+        <el-button @click="handleSubjectHierarchyDialogCancel">Cancel</el-button>
         <el-button type="primary" @click="saveSubjectTree">Save</el-button>
       </span>
     </el-dialog>
@@ -291,12 +291,15 @@
 <script>
 import { mapState, mapActions, mapMutations } from 'vuex'
 import tabdown from 'tabdown-sacha'
-import PrismEditor from 'vue-prism-editor'
+import {Ace as AceEditor} from 'vue2-brace-editor'
 import VueApexCharts from 'vue-apexcharts'
+
+import 'brace/mode/plain_text'
+import 'brace/theme/chrome'
 
 export default {
   components: {
-    PrismEditor,
+    AceEditor,
     VueApexCharts
   },
   computed: {
@@ -431,7 +434,7 @@ export default {
   },
   watch: {
     "server.varz": function (v, u) {
-      if (u !== undefined) {
+      if (u !== undefined && !this.subjectHierarchyDialogVisible) {
         let dt = new Date().getTime();
         this.in_msgs_rate = v.in_msgs - u.in_msgs
         this.msgs_in_series.push({
@@ -488,10 +491,10 @@ export default {
       }
     },
     "selected_index": function () {
-      this.msgs_in_series = []
-      this.msgs_out_series = []
-      this.bytes_in_series = []
-      this.bytes_out_series = []
+      this.clearTimeSeriesHistory()
+    },
+    "subjectHierarchyDialogVisible": function () {
+      this.clearTimeSeriesHistory()
     }
   },
   methods: {
@@ -558,6 +561,18 @@ export default {
     },
     handleBreadcrumb() {
       this.selectScreen({isServer: true, index: -1})
+    },
+    handleSubjectHierarchyDialogCancel() {
+      this.subjectHierarchyDialogVisible = false
+    },
+    clearTimeSeriesHistory() {
+      this.msgs_in_series = []
+      this.msgs_out_series = []
+      this.bytes_in_series = []
+      this.bytes_out_series = []
+    },
+    handleSubjectHierarchyChange(value) {
+      this.tabtree = value
     }
   }
 }

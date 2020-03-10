@@ -9,8 +9,6 @@ import { library } from '@fortawesome/fontawesome-svg-core'
 import { faUserSecret, faServer, faDesktop, faLink, faUnlink, faCopyright } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
 import '../fonts/fonts.css'
-import "prismjs";
-import "prismjs/themes/prism.css";
 import vueNumeralFilterInstaller from 'vue-numeral-filter'
 
 library.add(faUserSecret)
