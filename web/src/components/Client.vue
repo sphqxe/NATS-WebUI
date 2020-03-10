@@ -103,7 +103,7 @@ export default {
     ...mapActions(['updateClient', 'getAppState']),
     ...mapMutations(['selectScreen']),
     connect() {
-      this.client.socket = new ReconnectingWebSocket("ws://" + window.location.hostname + "/client/1")
+      this.client.socket = new ReconnectingWebSocket("ws://" + window.location.host + "/client/1")
       this.client.socket.addEventListener('message', this.handleSocketEvent(this.client))
     },
     disconnect() {
