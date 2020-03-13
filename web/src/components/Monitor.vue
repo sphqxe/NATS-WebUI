@@ -457,38 +457,46 @@ export default {
           x: dt,
           y: this.out_bytes_rate
         })
+
+        let animflag = true
+
         if (this.msgs_in_series.length > 180) {
           this.msgs_in_series = this.msgs_in_series.slice(this.msgs_in_series.length - 61)
+          animflag = false
         }
         if (this.msgs_out_series.length > 180) {
           this.msgs_out_series = this.msgs_out_series.slice(this.msgs_out_series.length - 61)
+          animflag = false
         }
         if (this.bytes_in_series.length > 180) {
           this.bytes_in_series = this.bytes_in_series.slice(this.bytes_in_series.length - 61)
+          animflag = false
         }
         if (this.msgs_in_series.length > 180) {
           this.bytes_out_series = this.bytes_out_series.slice(this.bytes_out_series.length - 61)
+          animflag = false
         }
+        
         this.$refs.chart1.updateSeries([
           { 
             name: 'Messages In',
-            data: this.msgs_in_series
+            data: animflag ? this.msgs_in_series : []
           },
           {
             name: 'Messages Out',
-            data: this.msgs_out_series
+            data: animflag ? this.msgs_out_series : []
           }
-        ])
+        ], animflag)
         this.$refs.chart2.updateSeries([
           { 
             name: 'Bytes In',
-            data: this.bytes_in_series
+            data: animflag ? this.bytes_in_series : []
           },
           {
             name: 'Bytes Out',
-            data: this.bytes_out_series
+            data: animflag ? this.bytes_out_series : []
           }
-        ])
+        ], animflag)
       }
     },
     "selected_index": function () {
