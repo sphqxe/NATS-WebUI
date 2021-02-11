@@ -12,7 +12,7 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.27",
     "@fortawesome/free-solid-svg-icons": "^5.12.1",
     "@fortawesome/vue-fontawesome": "^0.1.9",
-    "apexcharts": "^3.16.0",
+    "apexcharts": "^3.24.0",
     "axios": "^0.19.2",
     "core-js": "^3.6.4",
     "double-ended-queue": "^2.1.0-0",
