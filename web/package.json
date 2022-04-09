@@ -17,7 +17,7 @@
     "core-js": "^3.6.4",
     "double-ended-queue": "^2.1.0-0",
     "element-ui": "^2.13.0",
-    "moment": "^2.24.0",
+    "moment": "^2.29.2",
     "numeral": "^2.0.6",
     "reconnecting-websocket": "^4.4.0",
     "tabdown-sacha": "0.0.3",
